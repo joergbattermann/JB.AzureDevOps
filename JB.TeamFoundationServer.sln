@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2010
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JB.TeamFoundationServer.ReactiveClient", "JB.TeamFoundationServer.ReactiveClient\JB.TeamFoundationServer.ReactiveClient.csproj", "{35185AF0-55C2-4B83-82E8-68908120407E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{35185AF0-55C2-4B83-82E8-68908120407E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35185AF0-55C2-4B83-82E8-68908120407E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35185AF0-55C2-4B83-82E8-68908120407E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35185AF0-55C2-4B83-82E8-68908120407E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0E74E8BD-B8FA-47B7-A9F7-1AB470243203}
+	EndGlobalSection
+EndGlobal
