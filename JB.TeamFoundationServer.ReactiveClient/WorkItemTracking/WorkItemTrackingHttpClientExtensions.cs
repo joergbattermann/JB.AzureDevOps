@@ -6,7 +6,7 @@ using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
 
-namespace JB.TeamFoundationServer.ReactiveClient.WorkItemTracking
+namespace JB.TeamFoundationServer.WorkItemTracking
 {
     /// <summary>
     /// Extension Methods for <see cref="WorkItemTrackingHttpClient"/> instances.

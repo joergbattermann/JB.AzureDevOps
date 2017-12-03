@@ -1,4 +1,4 @@
-namespace JB.TeamFoundationServer.ReactiveClient.WorkItemTracking.WellKnownWorkItemFieldReferenceNames
+namespace JB.TeamFoundationServer.WorkItemTracking.WellKnownWorkItemFieldReferenceNames
 {
     public static class Links
     {

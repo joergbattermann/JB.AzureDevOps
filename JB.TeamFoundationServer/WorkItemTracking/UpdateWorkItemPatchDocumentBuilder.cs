@@ -2,7 +2,7 @@
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
 
-namespace JB.TeamFoundationServer.ReactiveClient.WorkItemTracking
+namespace JB.TeamFoundationServer.WorkItemTracking
 {
     /// <summary>
     /// Builds a <see cref="JsonPatchDocument"/> to be used in Work Item update methods.

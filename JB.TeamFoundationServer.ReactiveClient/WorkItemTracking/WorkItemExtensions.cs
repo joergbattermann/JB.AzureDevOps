@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 
-namespace JB.TeamFoundationServer.ReactiveClient.WorkItemTracking
+namespace JB.TeamFoundationServer.WorkItemTracking
 {
     /// <summary>
     /// Extension Methods for <see cref="WorkItem"/> instances.

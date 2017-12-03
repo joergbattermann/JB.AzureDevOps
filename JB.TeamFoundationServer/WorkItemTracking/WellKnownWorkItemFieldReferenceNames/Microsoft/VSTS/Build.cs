@@ -1,4 +1,4 @@
-﻿namespace JB.TeamFoundationServer.ReactiveClient.WorkItemTracking.WellKnownWorkItemFieldReferenceNames.Microsoft.VSTS
+﻿namespace JB.TeamFoundationServer.WorkItemTracking.WellKnownWorkItemFieldReferenceNames.Microsoft.VSTS
 {
     public static class Build
     {
