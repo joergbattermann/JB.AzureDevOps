@@ -47,4 +47,5 @@ namespace JB.TeamFoundationServer
                 .SelectMany(teamProjectCollectionReference => projectCollectionHttpClient.GetProjectCollection(teamProjectCollectionReference.Id.ToString(), userState));
         }
     }
-}
+
+    
