@@ -32,7 +32,7 @@ namespace JB.TeamFoundationServer
             if (teamProjectCollection == null) throw new ArgumentNullException(nameof(teamProjectCollection));
             if (vssCredentials == null) throw new ArgumentNullException(nameof(vssCredentials));
 
-            if(teamProjectCollection.Links == null || teamProjectCollection.Links.Links == null)
+            if(teamProjectCollection.Links?.Links == null)
                 throw new ArgumentException($"The {nameof(teamProjectCollection)}.{teamProjectCollection.Links} may not be null.", nameof(teamProjectCollection));
 
             const string projectReferenceLinkKey = "web";

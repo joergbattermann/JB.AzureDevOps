@@ -32,8 +32,8 @@ namespace JB.TeamFoundationServer
         /// Gets the team project collections for the given <paramref name="projectCollectionHttpClient" />.
         /// </summary>
         /// <param name="projectCollectionHttpClient">The project collection HTTP client.</param>
-        /// <param name="count">The amount of project collection references to retrieve at most.</param>
-        /// <param name="skip">How many project collection references to skip.</param>
+        /// <param name="count">The amount of project collections to retrieve at most.</param>
+        /// <param name="skip">How many project collections to skip.</param>
         /// <param name="userState">The user state object to pass along to the underlying method.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">projectCollectionHttpClient</exception>
@@ -47,5 +47,4 @@ namespace JB.TeamFoundationServer
                 .SelectMany(teamProjectCollectionReference => projectCollectionHttpClient.GetProjectCollection(teamProjectCollectionReference.Id.ToString(), userState));
         }
     }
-
-    
+}
