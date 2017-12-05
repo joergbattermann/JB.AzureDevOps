@@ -201,7 +201,8 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
         public static IObservable<WorkItem> GetWorkItems(this WorkItemTrackingHttpClient workItemTrackingHttpClient, IEnumerable<int> ids, IEnumerable<string> fields = null,
-            DateTime? asOf = null, WorkItemExpand? expand = null,
+            DateTime? asOf = null,
+            WorkItemExpand? expand = null,
             WorkItemErrorPolicy? errorPolicy = null,
             object userState = null)
         {
@@ -215,7 +216,8 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             // else
             return Observable.FromAsync(
                     token => workItemTrackingHttpClient.GetWorkItemsAsync(ids, fields, asOf, expand, errorPolicy, userState, token))
-                .SelectMany(workItems => workItems);
+                .SelectMany(workItems => workItems)
+                .OfType<WorkItem>(); // if errorPolicy is set to WorkItemErrorPolicy.Omit, all non-found ids / their workitems are returned by the VSTS .net Api as null (as of writing)
         }
     }
 }
