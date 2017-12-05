@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.0.1-preview</Version>
+    <Version>0.0.2-preview</Version>
     <Authors>Jörg Battermann</Authors>
     <Company>Jörg Battermann</Company>
     <RepositoryUrl>https://github.com/jbattermann/JB.TeamFoundationServer</RepositoryUrl>
-    <PackageTags>rx rxnet reactive tfs vsts</PackageTags>
+    <PackageTags>rx rxnet reactive extensions tfs vsts teamfoundation teamservices visualstudio visual studio</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>JB.TeamFoundationServer</RootNamespace>
   </PropertyGroup>

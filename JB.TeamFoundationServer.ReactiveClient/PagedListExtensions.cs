@@ -9,6 +9,18 @@ namespace JB.TeamFoundationServer
 {
     public static class PagedListExtensions
     {
+        /// <summary>
+        /// Gets all items of the provided <paramref name="pagedList"/> and all following values utilizing the <paramref name="continuationProducer"/> as an observable stream.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="pagedList">The initial paged list instance.</param>
+        /// <param name="continuationProducer">The continuation producer.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">
+        /// pagedList
+        /// or
+        /// continuationProducer
+        /// </exception>
         public static IObservable<T> ToObservable<T>(this IPagedList<T> pagedList,
             Func<CancellationToken, string, Task<IPagedList<T>>> continuationProducer)
         {
