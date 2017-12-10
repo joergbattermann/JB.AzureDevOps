@@ -25,11 +25,10 @@ namespace JB.TeamFoundationServer
             if (projectHttpClient == null)
                 throw new ArgumentNullException(nameof(projectHttpClient));
 
-            // start with the initial paged list and go deeper / continue from there using the helper method
-            return Observable.FromAsync(token => projectHttpClient.GetProjects(stateFilter, count, skip, userState))
-                .SelectMany(initalPagedList => 
-                    initalPagedList.ToObservable((token, continuationToken) 
-                        => projectHttpClient.GetProjects(stateFilter, count, skip, userState, continuationToken)));
+            return PagedListHelper.ObservableFromPagedListProducer(
+                (continuationCount, continuationSkip, continuationToken, cancellationToken) =>
+                    projectHttpClient.GetProjects(stateFilter, continuationCount, continuationSkip, userState, continuationToken),
+                count, skip);
         }
         
         /// <summary>
@@ -49,10 +48,50 @@ namespace JB.TeamFoundationServer
         {
             if (projectHttpClient == null)
                 throw new ArgumentNullException(nameof(projectHttpClient));
-
+            
             return projectHttpClient.GetTeamProjectReferences(stateFilter, count, skip, userState)
                 .SelectMany(teamProjectReference => 
-                    projectHttpClient.GetProject(teamProjectReference.Id.ToString(), includeCapabilities, includeHistory, userState));
+                    projectHttpClient.GetTeamProject(teamProjectReference.Id, includeCapabilities, includeHistory, userState));
+        }
+
+        /// <summary>
+        /// Gets a specific team project for the given <paramref name="projectNameOrId" />.
+        /// </summary>
+        /// <param name="projectHttpClient">The project HTTP client.</param>
+        /// <param name="projectNameOrId">The project name or identifier.</param>
+        /// <param name="includeCapabilities">Include capabilities (such as source control) in the team project result.</param>
+        /// <param name="includeHistory">Search within renamed projects (that had such name in the past).</param>
+        /// <param name="userState">The user state object to pass along to the underlying method.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">projectHttpClient</exception>
+        /// <exception cref="System.ArgumentNullException">projectHttpClient</exception>
+        public static IObservable<TeamProject> GetTeamProject(
+            this ProjectHttpClient projectHttpClient, string projectNameOrId, bool? includeCapabilities = null, bool includeHistory = false, object userState = null)
+        {
+            if (projectHttpClient == null)
+                throw new ArgumentNullException(nameof(projectHttpClient));
+
+            return Observable.FromAsync(token => projectHttpClient.GetProject(projectNameOrId, includeCapabilities, includeHistory, userState));
+        }
+
+        /// <summary>
+        /// Gets a specific team project for the given <paramref name="projectId" />.
+        /// </summary>
+        /// <param name="projectHttpClient">The project HTTP client.</param>
+        /// <param name="projectId">The project identifier.</param>
+        /// <param name="includeCapabilities">Include capabilities (such as source control) in the team project result.</param>
+        /// <param name="includeHistory">Search within renamed projects (that had such name in the past).</param>
+        /// <param name="userState">The user state object to pass along to the underlying method.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">projectHttpClient</exception>
+        /// <exception cref="System.ArgumentNullException">projectHttpClient</exception>
+        public static IObservable<TeamProject> GetTeamProject(
+            this ProjectHttpClient projectHttpClient, Guid projectId, bool? includeCapabilities = null, bool includeHistory = false, object userState = null)
+        {
+            if (projectHttpClient == null)
+                throw new ArgumentNullException(nameof(projectHttpClient));
+
+            return projectHttpClient.GetTeamProject(projectId.ToString(), includeCapabilities, includeHistory, userState);
         }
     }
 }

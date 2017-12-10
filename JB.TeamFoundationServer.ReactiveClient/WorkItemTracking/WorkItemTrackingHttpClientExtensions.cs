@@ -33,7 +33,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
             if (uploadStream == null) throw new ArgumentNullException(nameof(uploadStream));
-
+            
             return Observable.FromAsync(token => workItemTrackingHttpClient.CreateAttachmentAsync(uploadStream, fileName, uploadType, areaPath, userState, token));
         }
 
@@ -218,6 +218,127 @@ namespace JB.TeamFoundationServer.WorkItemTracking
                     token => workItemTrackingHttpClient.GetWorkItemsAsync(ids, fields, asOf, expand, errorPolicy, userState, token))
                 .SelectMany(workItems => workItems)
                 .OfType<WorkItem>(); // if errorPolicy is set to WorkItemErrorPolicy.Omit, all non-found ids / their workitems are returned by the VSTS .net Api as null (as of writing)
+        }
+
+        /// <summary>
+        /// Gets the work item relation type for the provided <paramref name="workItemLinkTypeReferenceName"/>.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="workItemLinkTypeReferenceName">Reference name of the work item link type.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItemRelationType> GetWorkItemRelationType(this WorkItemTrackingHttpClient workItemTrackingHttpClient, string workItemLinkTypeReferenceName, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.GetRelationTypeAsync(workItemLinkTypeReferenceName, userState, token))
+                .OfType<WorkItemRelationType>();
+        }
+
+        /// <summary>
+        /// Gets the available work item relation types.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItemRelationType> GetWorkItemRelationTypes(this WorkItemTrackingHttpClient workItemTrackingHttpClient, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.GetRelationTypesAsync(userState, token))
+                .SelectMany(workItemRelationTypes => workItemRelationTypes);
+        }
+
+        /// <summary>
+        /// Gets the work item deltas between revisions.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="workItemId">The work item identifier.</param>
+        /// <param name="count">The amount of updates to retrieve at most.</param>
+        /// <param name="skip">How many updates to skip.</param>
+        /// <param name="userState">The user state object to pass along to the underlying method.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItemUpdate> GetWorkItemUpdates(this WorkItemTrackingHttpClient workItemTrackingHttpClient, int workItemId, int? count = null, int? skip = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.GetUpdatesAsync(workItemId, count, skip, userState, token))
+                .SelectMany(workItemUpdates => workItemUpdates);
+        }
+
+        /// <summary>
+        /// Gets a specific work item revision delta for the given <paramref name="updateNumber" />.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="workItemId">The work item identifier.</param>
+        /// <param name="updateNumber">The update number to retrieve.</param>
+        /// <param name="userState">The user state object to pass along to the underlying method.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItemUpdate> GetWorkItemUpdate(this WorkItemTrackingHttpClient workItemTrackingHttpClient, int workItemId, int updateNumber, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.GetUpdateAsync(workItemId, updateNumber, userState, token));
+        }
+
+        /// <summary>
+        /// Gets the work item deltas between revisions.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="workItemId">The work item identifier.</param>
+        /// <param name="count">The amount of updates to retrieve at most.</param>
+        /// <param name="skip">How many updates to skip.</param>
+        /// <param name="userState">The user state object to pass along to the underlying method.</param>
+        /// <param name="expand">The <see cref="WorkItemExpand"/> to apply to the underlying client.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItem> GetWorkItemRevisions(this WorkItemTrackingHttpClient workItemTrackingHttpClient, int workItemId, int? count = null, int? skip = null, object userState = null, WorkItemExpand? expand = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return PagedListHelper.ObservableFromPagedListProducer(
+                (continuationCount, continuationSkip, cancellationToken) =>
+                    workItemTrackingHttpClient.GetRevisionsAsync(workItemId, continuationCount, continuationSkip, expand, userState, cancellationToken),
+                count, skip);
+        }
+
+        /// <summary>
+        /// Returns information for all work item fields for a specific <paramref name="projectId"/>.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="projectId">The project identifier.</param>
+        /// <param name="expand">Use ExtensionFields to include extension fields, otherwise exclude them. Unless the feature flag for this parameter is enabled, extension fields are always included.</param>
+        /// <param name="userState">The user state object to pass along to the underlying method.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItemField> GetWorkItemFields(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid projectId, GetFieldsExpand? expand = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return workItemTrackingHttpClient.GetWorkItemFields(projectId.ToString(), expand, userState);
+        }
+
+        /// <summary>
+        /// Returns information for all work item fields, optionally for a specific project only (via its <paramref name="projectNameOrId"/>).
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="projectNameOrId">The project name or identifier.</param>
+        /// <param name="expand">Use ExtensionFields to include extension fields, otherwise exclude them. Unless the feature flag for this parameter is enabled, extension fields are always included.</param>
+        /// <param name="userState">The user state object to pass along to the underlying method.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItemField> GetWorkItemFields(this WorkItemTrackingHttpClient workItemTrackingHttpClient, string projectNameOrId = "", GetFieldsExpand? expand = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return (!string.IsNullOrWhiteSpace(projectNameOrId)
+                    ? Observable.FromAsync(token => workItemTrackingHttpClient.GetFieldsAsync(projectNameOrId, expand, userState, token))
+                    : Observable.FromAsync(token => workItemTrackingHttpClient.GetFieldsAsync(expand, userState, token)))
+                .SelectMany(workItemUpdates => workItemUpdates);
         }
     }
 }
