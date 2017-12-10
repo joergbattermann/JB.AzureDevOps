@@ -21,5 +21,21 @@ namespace JB.TeamFoundationServer.WorkItemTracking
 
             throw new NotImplementedException();
         }
+
+        public static IObservable<WorkItem> AddAttachment(this WorkItem workItem, WorkItem targetWorkItem, string workItemLinkTypeReferenceName, string comment = "", bool? validateOnly = null, bool? bypassRules = null, bool? suppressNotifications = null, object userState = null)
+        {
+            // combine uploading of attachment and adding to work item in one method
+            // see https://github.com/Microsoft/vsts-dotnet-samples/blob/master/ClientLibrary/Snippets/Microsoft.TeamServices.Samples.Client/WorkItemTracking/WorkItemsSample.cs#L547
+
+            throw new NotImplementedException();
+        }
+
+        public static IObservable<WorkItem> AddAttachments(this WorkItem workItem, WorkItem targetWorkItem, string workItemLinkTypeReferenceName, string comment = "", bool? validateOnly = null, bool? bypassRules = null, bool? suppressNotifications = null, object userState = null)
+        {
+            // combine uploading of attachments and adding them to thework item in one method
+            // see https://github.com/Microsoft/vsts-dotnet-samples/blob/master/ClientLibrary/Snippets/Microsoft.TeamServices.Samples.Client/WorkItemTracking/WorkItemsSample.cs#L547
+
+            throw new NotImplementedException();
+        }
     }
 }

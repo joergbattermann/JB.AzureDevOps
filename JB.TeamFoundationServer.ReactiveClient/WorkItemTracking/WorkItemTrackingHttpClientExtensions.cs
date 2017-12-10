@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
+using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
@@ -19,7 +22,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
         /// <param name="uploadStream">The upload stream.</param>
         /// <param name="fileName">Name of the file.</param>
-        /// <param name="uploadType">Type of the upload.</param>
+        /// <param name="uploadType">Type of the upload. If defined it must be either 'simple' or 'chunked' according to <see href="https://www.visualstudio.com/en-us/docs/integrate/api/wit/attachments#upload-an-attachment">API documentation</see>.</param>
         /// <param name="areaPath">The area path.</param>
         /// <param name="userState">The userState object.</param>
         /// <returns></returns>
@@ -33,8 +36,36 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
             if (uploadStream == null) throw new ArgumentNullException(nameof(uploadStream));
-            
+
             return Observable.FromAsync(token => workItemTrackingHttpClient.CreateAttachmentAsync(uploadStream, fileName, uploadType, areaPath, userState, token));
+        }
+
+        /// <summary>
+        /// Creates an attachment for the provided <paramref name="fileToUpload" />.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="fileToUpload">The file to upload.</param>
+        /// <param name="uploadType">Type of the upload. If defined it must be either 'simple' or 'chunked' according to <see href="https://www.visualstudio.com/en-us/docs/integrate/api/wit/attachments#upload-an-attachment">API documentation</see>.</param>
+        /// <param name="areaPath">The area path.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient
+        /// or
+        /// uploadStream</exception>
+        public static IObservable<AttachmentReference> CreateAttachment(this WorkItemTrackingHttpClient workItemTrackingHttpClient, FileInfo fileToUpload,
+            string uploadType = null, string areaPath = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (fileToUpload == null) throw new ArgumentNullException(nameof(fileToUpload));
+            if (fileToUpload.Exists == false) throw new FileNotFoundException($"File '{fileToUpload.FullName}' cannot be found or process has insufficient permissions.");
+
+            return Observable.FromAsync(async token =>
+            {
+                using (var fileStream = fileToUpload.Open(FileMode.Open, FileAccess.Read))
+                {
+                    return await workItemTrackingHttpClient.CreateAttachmentAsync(fileStream, fileToUpload.Name, uploadType, areaPath, userState, token);
+                }
+            });
         }
 
         /// <summary>
@@ -72,6 +103,105 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             return Observable.FromAsync(token => workItemTrackingHttpClient.CreateQueryAsync(postedQuery, project, parentQueryItemPath, userState, token));
         }
 
+        /// <summary>
+        /// Gets all availabile work item tracking artifact link types for the <paramref name="workItemTrackingHttpClient"/>.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkArtifactLink> GetArtifactLinkTypes(this WorkItemTrackingHttpClient workItemTrackingHttpClient, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.GetWorkArtifactLinkTypesAsync(userState, token))
+                .SelectMany(workArtifactLinks => workArtifactLinks);
+        }
+
+        /// <summary>
+        /// Gets the work item references for the provided artifact uris in the <paramref name="artifactUriQuery"/>.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="artifactUriQuery">The artifact URI query.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">
+        /// workItemTrackingHttpClient
+        /// or
+        /// artifactUriQuery
+        /// </exception>
+        public static IObservable<KeyValuePair<string, IEnumerable<WorkItemReference>>> GetWorkItemReferencesForArtifactUris(this WorkItemTrackingHttpClient workItemTrackingHttpClient, ArtifactUriQuery artifactUriQuery, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (artifactUriQuery == null) throw new ArgumentNullException(nameof(artifactUriQuery));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.GetWorkItemIdsForArtifactUrisAsync(artifactUriQuery, userState, token))
+                .SelectMany(artifactUriQueryResult => artifactUriQueryResult.ArtifactUrisQueryResult)
+                .Where(keyValuePair => !string.IsNullOrWhiteSpace(keyValuePair.Key))
+                .Select(keyValuePair => new KeyValuePair<string, IEnumerable<WorkItemReference>>(keyValuePair.Key, keyValuePair.Value ?? Enumerable.Empty<WorkItemReference>()));
+        }
+
+        /// <summary>
+        /// Gets the work item references for the provided artifact uris in the <paramref name="artifactUris"/>.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="artifactUris">The artifact uris to query for.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">
+        /// workItemTrackingHttpClient
+        /// or
+        /// artifactUriQuery
+        /// </exception>
+        public static IObservable<KeyValuePair<string, IEnumerable<WorkItemReference>>> GetWorkItemReferencesForArtifactUris(this WorkItemTrackingHttpClient workItemTrackingHttpClient, IEnumerable<string> artifactUris, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (artifactUris == null) throw new ArgumentNullException(nameof(artifactUris));
+
+            return workItemTrackingHttpClient.GetWorkItemReferencesForArtifactUris(new ArtifactUriQuery { ArtifactUris = artifactUris}, userState);
+        }
+        
+        /// <summary>
+        /// Dowloads the content of the attachment for the provided <paramref name="attachmentId"/>.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="attachmentId">The attachment identifier.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<Stream> DownloadAttachmentContent(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid attachmentId, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.GetAttachmentContentAsync(attachmentId, userState: userState, cancellationToken: token));
+        }
+
+        /// <summary>
+        /// Downloads the content of the attachment for the provided <paramref name="attachmentId" /> and writes it to the <paramref name="outputFile" />.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="attachmentId">The attachment identifier.</param>
+        /// <param name="outputFile">The output / target file to write the content to.</param>
+        /// <param name="overwriteExisting">if set to <c>true</c> [overwrite existing].</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<Unit> DownloadAttachmentToFile(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid attachmentId, FileInfo outputFile, bool overwriteExisting = false, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (outputFile == null) throw new ArgumentNullException(nameof(outputFile));
+
+            return workItemTrackingHttpClient.DownloadAttachmentContent(attachmentId, userState)
+                .SelectMany(async (contentStream, cancellationToken) =>
+                {
+                    using (var outputStream = outputFile.Open(overwriteExisting ? FileMode.OpenOrCreate : FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        await contentStream.CopyToAsync(outputStream, 81920, cancellationToken);
+                    }
+                    
+                    return Unit.Default;
+                });
+        }
 
         /// <summary>
         /// Creates a single work item for the provided <paramref name="creationDocument"/>.

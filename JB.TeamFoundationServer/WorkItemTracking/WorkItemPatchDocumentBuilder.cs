@@ -1,4 +1,6 @@
 ﻿using System;
+using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
+using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi.Patch;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
 
@@ -7,49 +9,53 @@ namespace JB.TeamFoundationServer.WorkItemTracking
     /// <summary>
     /// Builds a <see cref="JsonPatchDocument"/> to be used in Work Item Creation and Update methods.
     /// </summary>
-    public class WorkItemPatchDocumentBuilder
+    public abstract class WorkItemPatchDocumentBuilder
     {
         // ToDo: these must be placed elsewhere / more centrally
-        private const string FieldsBasePath = "/fields";
-        private const string RelationsBasePath = "/relations";
-        private const string RelationsReverseSuffix = "-reverse";
-        private const string RelationsForwardSuffix = "-forward";
+        protected const string FieldsBasePath = "/fields";
+        protected const string RelationsBasePath = "/relations";
+        protected const string RelationsReverseSuffix = "-reverse";
+        protected const string RelationsForwardSuffix = "-forward";
 
-        private readonly JsonPatchDocument _patchDocument = new JsonPatchDocument();
+        protected const string RelationReferenceNameForAttachedFiles = "AttachedFile";
+        protected const string RelationReferenceNameForArtifactLinks = "ArtifactLink";
+        protected const string RelationReferenceNameForHyperlinks = "Hyperlink";
+
+        protected JsonPatchDocument PatchDocument { get; } = new JsonPatchDocument();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:System.Object"></see> class.
+        /// Initializes a new instance of the <see cref="WorkItemPatchDocumentBuilder" /> class.
         /// </summary>
-        public WorkItemPatchDocumentBuilder()
+        protected WorkItemPatchDocumentBuilder()
         {
             // for creation see https://github.com/Microsoft/vsts-dotnet-samples/blob/master/ClientLibrary/Snippets/Microsoft.TeamServices.Samples.Client/WorkItemTracking/WorkItemsSample.cs#L198
             // for update see https://github.com/Microsoft/vsts-dotnet-samples/blob/master/ClientLibrary/Snippets/Microsoft.TeamServices.Samples.Client/WorkItemTracking/WorkItemsSample.cs#L316
         }
 
         /// <summary>
-        /// Adds a forward relation of the given <paramref name="workItemLinkTypeReferenceName" /> type pointing to the provided <paramref name="targetWorkItemUrl" /> to this <see cref="WorkItemPatchDocumentBuilder" /> and ultimately the resulting <see cref="JsonPatchOperation"/>.
+        /// Adds a forward relation of the given <paramref name="linkTypeReferenceName" /> type pointing to the provided <paramref name="targetWorkItemUrl" /> to this <see cref="WorkItemPatchDocumentBuilder" /> and ultimately the resulting <see cref="JsonPatchOperation"/>.
         /// </summary>
         /// <param name="targetWorkItemUrl">The target work item URL.</param>
-        /// <param name="workItemLinkTypeReferenceName">Reference Name of the work item link type.</param>
+        /// <param name="linkTypeReferenceName">Reference Name of the work item link type.</param>
         /// <param name="comment">The (optional) relation/link comment.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException">fieldReferenceName - fieldReferenceName</exception>
-        public virtual WorkItemPatchDocumentBuilder AddForwardRelation(string targetWorkItemUrl, string workItemLinkTypeReferenceName, string comment = "")
+        public virtual WorkItemPatchDocumentBuilder AddForwardRelation(string targetWorkItemUrl, string linkTypeReferenceName, string comment = "")
         {
             if (string.IsNullOrWhiteSpace(targetWorkItemUrl))
                 throw new ArgumentException($"Value for '{nameof(targetWorkItemUrl)}' cannot be null or whitespace.", nameof(targetWorkItemUrl));
 
-            if(string.IsNullOrWhiteSpace(workItemLinkTypeReferenceName))
-                throw new ArgumentException($"Value for '{nameof(workItemLinkTypeReferenceName)}' cannot be null or whitespace.", nameof(workItemLinkTypeReferenceName));
+            if(string.IsNullOrWhiteSpace(linkTypeReferenceName))
+                throw new ArgumentException($"Value for '{nameof(linkTypeReferenceName)}' cannot be null or whitespace.", nameof(linkTypeReferenceName));
 
-            _patchDocument.Add(
+            PatchDocument.Add(
                 new JsonPatchOperation()
                 {
                     Operation = Operation.Add,
                     Path = $"{RelationsBasePath}/-",
                     Value = new
                     {
-                        rel = $"{workItemLinkTypeReferenceName}{RelationsForwardSuffix}",
+                        rel = $"{linkTypeReferenceName}{RelationsForwardSuffix}",
                         url = targetWorkItemUrl,
                         attributes = new
                         {
@@ -65,29 +71,29 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
-        /// Adds a reverse relation of the given <paramref name="workItemLinkTypeReferenceName" /> type pointing to the provided <paramref name="targetWorkItemUrl" /> to this <see cref="WorkItemPatchDocumentBuilder" /> and ultimately the resulting <see cref="JsonPatchOperation"/>.
+        /// Adds a reverse relation of the given <paramref name="linkTypeReferenceName" /> type pointing to the provided <paramref name="targetWorkItemUrl" /> to this <see cref="WorkItemPatchDocumentBuilder" /> and ultimately the resulting <see cref="JsonPatchOperation"/>.
         /// </summary>
         /// <param name="targetWorkItemUrl">The target work item URL.</param>
-        /// <param name="workItemLinkTypeReferenceName">Reference Name of the work item link type.</param>
+        /// <param name="linkTypeReferenceName">Reference Name of the work item link type.</param>
         /// <param name="comment">The (optional) relation/link comment.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException">fieldReferenceName - fieldReferenceName</exception>
-        public virtual WorkItemPatchDocumentBuilder AddReverseRelation(string targetWorkItemUrl, string workItemLinkTypeReferenceName, string comment = "")
+        public virtual WorkItemPatchDocumentBuilder AddReverseRelation(string targetWorkItemUrl, string linkTypeReferenceName, string comment = "")
         {
             if (string.IsNullOrWhiteSpace(targetWorkItemUrl))
                 throw new ArgumentException($"Value for '{nameof(targetWorkItemUrl)}' cannot be null or whitespace.", nameof(targetWorkItemUrl));
 
-            if (string.IsNullOrWhiteSpace(workItemLinkTypeReferenceName))
-                throw new ArgumentException($"Value for '{nameof(workItemLinkTypeReferenceName)}' cannot be null or whitespace.", nameof(workItemLinkTypeReferenceName));
+            if (string.IsNullOrWhiteSpace(linkTypeReferenceName))
+                throw new ArgumentException($"Value for '{nameof(linkTypeReferenceName)}' cannot be null or whitespace.", nameof(linkTypeReferenceName));
 
-            _patchDocument.Add(
+            PatchDocument.Add(
                 new JsonPatchOperation()
                 {
                     Operation = Operation.Add,
                     Path = $"{RelationsBasePath}/-",
                     Value = new
                     {
-                        rel = $"{workItemLinkTypeReferenceName}{RelationsReverseSuffix}",
+                        rel = $"{linkTypeReferenceName}{RelationsReverseSuffix}",
                         url = targetWorkItemUrl,
                         attributes = new
                         {
@@ -98,6 +104,102 @@ namespace JB.TeamFoundationServer.WorkItemTracking
                     }
                 }
             );
+
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an attachment to a work item by using the <paramref name="attachmentReference"/> and optionally setting the attachment's <paramref name="comment"/>.
+        /// </summary>
+        /// <param name="attachmentReference">The attachment reference.</param>
+        /// <param name="comment">The (optional) attachment comment.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">attachmentReference</exception>
+        public virtual WorkItemPatchDocumentBuilder AddAttachment(AttachmentReference attachmentReference, string comment = "")
+        {
+            if (attachmentReference == null) throw new ArgumentNullException(nameof(attachmentReference));
+
+            PatchDocument.Add(
+                new JsonPatchOperation()
+                {
+                    Operation = Operation.Add,
+                    Path = $"{RelationsBasePath}/-",
+                    Value = new
+                    {
+                        rel = RelationReferenceNameForAttachedFiles,
+                        url = attachmentReference.Url,
+                        attributes = new
+                        {
+                            comment = !string.IsNullOrWhiteSpace(comment)
+                                ? comment
+                                : string.Empty
+                        }
+                    }
+                });
+
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a hyperlink to a work item by using the <paramref name="hyperLink"/> and optionally setting the links's <paramref name="comment"/>.
+        /// </summary>
+        /// <param name="hyperLink">The hyperlink uri.</param>
+        /// <param name="comment">The (optional) hyperlink comment.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">attachmentReference</exception>
+        public virtual WorkItemPatchDocumentBuilder AddHyperlink(Uri hyperLink, string comment = "")
+        {
+            if (hyperLink == null) throw new ArgumentNullException(nameof(hyperLink));
+
+            PatchDocument.Add(
+                new JsonPatchOperation()
+                {
+                    Operation = Operation.Add,
+                    Path = $"{RelationsBasePath}/-",
+                    Value = new
+                    {
+                        rel = RelationReferenceNameForHyperlinks,
+                        url = hyperLink,
+                        attributes = new
+                        {
+                            comment = !string.IsNullOrWhiteSpace(comment)
+                                ? comment
+                                : string.Empty
+                        }
+                    }
+                });
+
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an artifucat link to a work item by using the <paramref name="artifactLink"/> and optionally setting the links's <paramref name="comment"/>.
+        /// </summary>
+        /// <param name="artifactLink">The artifact link.</param>
+        /// <param name="comment">The (optional) artifact link comment.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">attachmentReference</exception>
+        public virtual WorkItemPatchDocumentBuilder AddArtifactLink(ArtifactLink artifactLink, string comment = "")
+        {
+            if (artifactLink == null) throw new ArgumentNullException(nameof(artifactLink));
+
+            PatchDocument.Add(
+                new JsonPatchOperation()
+                {
+                    Operation = Operation.Add,
+                    Path = $"{RelationsBasePath}/-",
+                    Value = new
+                    {
+                        rel = RelationReferenceNameForArtifactLinks,
+                        url = artifactLink.ReferencedUri,
+                        attributes = new
+                        {
+                            comment = !string.IsNullOrWhiteSpace(comment)
+                                ? comment
+                                : string.Empty
+                        }
+                    }
+                });
 
             return this;
         }
@@ -109,12 +211,12 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="value">The value to set.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException">fieldReferenceName - fieldReferenceName</exception>
-        public virtual WorkItemPatchDocumentBuilder AddFieldValue(string fieldReferenceName, object value)
+        public virtual WorkItemPatchDocumentBuilder AddOrUpdateFieldValue(string fieldReferenceName, object value)
         {
             if (string.IsNullOrWhiteSpace(fieldReferenceName))
                 throw new ArgumentException($"Value for '{nameof(fieldReferenceName)}' cannot be null or whitespace.", nameof(fieldReferenceName));
 
-            _patchDocument.Add(
+            PatchDocument.Add(
                 new JsonPatchOperation()
                 {
                     Operation = Operation.Add,
@@ -124,6 +226,20 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             );
 
             return this;
+        }
+
+        /// <summary>
+        /// Adds a history entry for the provided <paramref name="comment"/>.
+        /// </summary>
+        /// <param name="comment">The comment to add.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException">comment - comment</exception>
+        public virtual WorkItemPatchDocumentBuilder AddComment(string comment)
+        {
+            if (string.IsNullOrWhiteSpace(comment))
+                throw new ArgumentException($"Value for '{nameof(comment)}' cannot be null or whitespace.", nameof(comment));
+
+            return AddOrUpdateFieldValue(WellKnownWorkItemFieldReferenceNames.System.History, comment);
         }
 
         /// <summary>
@@ -137,12 +253,12 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             if (string.IsNullOrWhiteSpace(fieldReferenceName))
                 throw new ArgumentException($"Value for '{nameof(fieldReferenceName)}' cannot be null or whitespace.", nameof(fieldReferenceName));
 
-            _patchDocument.RemoveAll(operation =>
+            PatchDocument.RemoveAll(operation =>
                 string.Equals(operation.Path, fieldReferenceName, StringComparison.InvariantCultureIgnoreCase));
 
             return this;
         }
-
+        
         /// <summary>
         /// Gets the <see cref="JsonPatchOperation.Path"/> for the provided <paramref name="fieldReferenceName"/>.
         /// </summary>
@@ -161,7 +277,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// Gets the <see cref="JsonPatchDocument"/> representing the current state of this <see cref="WorkItemPatchDocumentBuilder"/>.
         /// </summary>
         /// <returns></returns>
-        public virtual JsonPatchDocument ToJsonPatchDocument() => _patchDocument;
+        public virtual JsonPatchDocument ToJsonPatchDocument() => PatchDocument;
 
         /// <summary>
         /// Performs an implicit conversion from <see cref="WorkItemPatchDocumentBuilder"/> to <see cref="JsonPatchDocument"/>.
@@ -170,6 +286,108 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <returns>
         /// The result of the conversion.
         /// </returns>
-        public static implicit operator JsonPatchDocument(WorkItemPatchDocumentBuilder workItemBuilder) => workItemBuilder._patchDocument;
+        public static implicit operator JsonPatchDocument(WorkItemPatchDocumentBuilder workItemBuilder) => workItemBuilder.PatchDocument;
+    }
+
+    public abstract class WorkItemPatchDocumentBuilder<T> : WorkItemPatchDocumentBuilder
+        where T : WorkItemPatchDocumentBuilder
+    {
+        /// <summary>
+        /// Adds the field <paramref name="value"/> for the provided <paramref name="fieldReferenceName"/> to this instance.
+        /// </summary>
+        /// <param name="fieldReferenceName">Reference Name of the work item field.</param>
+        /// <param name="value">The value to set.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException">fieldReferenceName - fieldReferenceName</exception>
+        public new virtual T AddOrUpdateFieldValue(string fieldReferenceName, object value)
+        {
+            return base.AddOrUpdateFieldValue(fieldReferenceName, value) as T;
+        }
+
+        /// <summary>
+        /// Adds a history entry for the provided <paramref name="comment"/>.
+        /// </summary>
+        /// <param name="comment">The comment to add.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException">comment - comment</exception>
+        public new virtual T AddComment(string comment)
+        {
+            return base.AddComment(comment) as T;
+        }
+
+        /// <summary>
+        /// Adds a forward relation of the given <paramref name="workItemLinkTypeReferenceName" /> type pointing to the provided <paramref name="targetWorkItemUrl" /> to this <see cref="WorkItemPatchDocumentBuilder" /> and ultimately the resulting <see cref="JsonPatchOperation"/>.
+        /// </summary>
+        /// <param name="targetWorkItemUrl">The target work item URL.</param>
+        /// <param name="workItemLinkTypeReferenceName">Reference Name of the work item link type.</param>
+        /// <param name="comment">The (optional) relation/link comment.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException">fieldReferenceName - fieldReferenceName</exception>
+        public new virtual T AddForwardRelation(string targetWorkItemUrl, string workItemLinkTypeReferenceName,
+            string comment = "")
+        {
+            return base.AddForwardRelation(targetWorkItemUrl, workItemLinkTypeReferenceName, comment) as T;
+        }
+
+        /// <summary>
+        /// Adds a reverse relation of the given <paramref name="workItemLinkTypeReferenceName" /> type pointing to the provided <paramref name="targetWorkItemUrl" /> to this <see cref="WorkItemPatchDocumentBuilder" /> and ultimately the resulting <see cref="JsonPatchOperation"/>.
+        /// </summary>
+        /// <param name="targetWorkItemUrl">The target work item URL.</param>
+        /// <param name="workItemLinkTypeReferenceName">Reference Name of the work item link type.</param>
+        /// <param name="comment">The (optional) relation/link comment.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException">fieldReferenceName - fieldReferenceName</exception>
+        public new virtual T AddReverseRelation(string targetWorkItemUrl, string workItemLinkTypeReferenceName,
+            string comment = "")
+        {
+            return base.AddReverseRelation(targetWorkItemUrl, workItemLinkTypeReferenceName, comment) as T;
+        }
+
+        /// <summary>
+        /// Adds an attachment to a work item by using the <paramref name="attachmentReference"/> and optionally setting the attachment's <paramref name="comment"/>.
+        /// </summary>
+        /// <param name="attachmentReference">The attachment reference.</param>
+        /// <param name="comment">The (optional) attachment comment.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">attachmentReference</exception>
+        public new virtual T AddAttachment(AttachmentReference attachmentReference, string comment = "")
+        {
+            return base.AddAttachment(attachmentReference, comment) as T;
+        }
+
+        /// <summary>
+        /// Adds a hyperlink to a work item by using the <paramref name="hyperLink"/> and optionally setting the links's <paramref name="comment"/>.
+        /// </summary>
+        /// <param name="hyperLink">The hyperlink uri.</param>
+        /// <param name="comment">The (optional) attachment comment.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">attachmentReference</exception>
+        public new virtual T AddHyperlink(Uri hyperLink, string comment = "")
+        {
+            return base.AddHyperlink(hyperLink, comment) as T;
+        }
+
+        /// <summary>
+        /// Adds an artifucat link to a work item by using the <paramref name="artifactLink"/> and optionally setting the links's <paramref name="comment"/>.
+        /// </summary>
+        /// <param name="artifactLink">The artifact link.</param>
+        /// <param name="comment">The (optional) artifact link comment.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">attachmentReference</exception>
+        public new virtual T AddArtifactLink(ArtifactLink artifactLink, string comment = "")
+        {
+            return base.AddArtifactLink(artifactLink, comment) as T;
+        }
+
+        /// <summary>
+        /// Removes the field values for the provided <paramref name="fieldReferenceName"/> from this <see cref="WorkItemPatchDocumentBuilder"/> and ultimately the resulting <see cref="JsonPatchOperation"/>.
+        /// </summary>
+        /// <param name="fieldReferenceName">Reference Name of the work item field.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException">fieldReferenceName - fieldReferenceName</exception>
+        public new virtual T RemoveFieldValue(string fieldReferenceName)
+        {
+            return base.RemoveFieldValue(fieldReferenceName) as T;
+        }
     }
 }
