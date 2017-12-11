@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
@@ -165,8 +166,25 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         public static IObservable<WorkItemClassificationNode> GetRootIterationPathNode(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid project, int? depth = null, object userState = null)
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
-
+            
             return workItemTrackingHttpClient.GetIterationPathNode(project, path: null, depth: depth, userState: userState);
+        }
+
+        /// <summary>
+        /// Gets the root classification (area and iteration) nodes.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="project">The project.</param>
+        /// <param name="depth">Depth of children to retrieve.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItemClassificationNode> GetRootClassificationNodes(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid project, int? depth = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.GetRootNodesAsync(project, depth, userState, token))
+                .SelectMany(classificationNodes => classificationNodes);
         }
 
         /// <summary>
