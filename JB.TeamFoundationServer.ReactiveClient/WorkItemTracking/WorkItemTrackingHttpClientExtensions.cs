@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
-using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
@@ -87,6 +86,90 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
+        /// Gets the classification node.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="project">The project.</param>
+        /// <param name="structureGroup">The structure group.</param>
+        /// <param name="path">Path of the classification node.</param>
+        /// <param name="depth">Depth of children to retrieve.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItemClassificationNode> GetClassificationNode(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid project, TreeStructureGroup structureGroup, string path = null, int? depth = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.GetClassificationNodeAsync(project, structureGroup, path, depth, userState, token));
+        }
+
+        /// <summary>
+        /// Gets the area path node.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="project">The project.</param>
+        /// <param name="path">Path of the classification node.</param>
+        /// <param name="depth">Depth of children to retrieve.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItemClassificationNode> GetAreaPathNode(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid project, string path = null, int? depth = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return workItemTrackingHttpClient.GetClassificationNode(project, TreeStructureGroup.Areas, path, depth, userState);
+        }
+
+        /// <summary>
+        /// Gets the root area path node.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="project">The project.</param>
+        /// <param name="depth">Depth of children to retrieve.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItemClassificationNode> GetRootAreaPathNode(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid project, int? depth = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return workItemTrackingHttpClient.GetAreaPathNode(project, path: null, depth: depth, userState: userState);
+        }
+
+        /// <summary>
+        /// Gets the iteration path node.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="project">The project.</param>
+        /// <param name="path">Path of the classification node.</param>
+        /// <param name="depth">Depth of children to retrieve.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItemClassificationNode> GetIterationPathNode(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid project, string path = null, int? depth = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return workItemTrackingHttpClient.GetClassificationNode(project, TreeStructureGroup.Iterations, path, depth, userState);
+        }
+
+        /// <summary>
+        /// Gets the root iteration path node.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="project">The project.</param>
+        /// <param name="depth">Depth of children to retrieve.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItemClassificationNode> GetRootIterationPathNode(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid project, int? depth = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            return workItemTrackingHttpClient.GetIterationPathNode(project, path: null, depth: depth, userState: userState);
+        }
+
+        /// <summary>
         /// Creates or moves a query.
         /// </summary>
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
@@ -116,6 +199,22 @@ namespace JB.TeamFoundationServer.WorkItemTracking
 
             return Observable.FromAsync(token => workItemTrackingHttpClient.GetWorkArtifactLinkTypesAsync(userState, token))
                 .SelectMany(workArtifactLinks => workArtifactLinks);
+        }
+
+        /// <summary>
+        /// Executes the provided batch <paramref name="requests"/> in a single call.
+        /// See <see href="https://www.visualstudio.com/en-us/docs/integrate/api/wit/batch"/> for details.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="requests">The batch requests to execute</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns>The list of responses for each request.</returns>
+        public static IObservable<WitBatchResponse> ExecuteBatchRequests(this WorkItemTrackingHttpClient workItemTrackingHttpClient, IEnumerable<WitBatchRequest> requests, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            
+            return Observable.FromAsync(token => workItemTrackingHttpClient.ExecuteBatchRequest(requests, userState, token))
+                .SelectMany(witBatchResponses => witBatchResponses);
         }
 
         /// <summary>
@@ -196,6 +295,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
                 {
                     using (var outputStream = outputFile.Open(overwriteExisting ? FileMode.OpenOrCreate : FileMode.Create, FileAccess.ReadWrite))
                     {
+                        // ToDo: make the buffer value an optional parameter or use a BCL constant (if available) - this is dirty
                         await contentStream.CopyToAsync(outputStream, 81920, cancellationToken);
                     }
                     
@@ -275,6 +375,27 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             if (updateDocument == null) throw new ArgumentNullException(nameof(updateDocument));
 
             return Observable.FromAsync(token => workItemTrackingHttpClient.UpdateWorkItemAsync(updateDocument, id, validateOnly, bypassRules, suppressNotifications, userState, token));
+        }
+
+        /// <summary>
+        /// Updates multiple work items with the provided <paramref name="updateDocument"/>.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="updateDocument">The JSON Patch document representing the update.</param>
+        /// <param name="ids">The ids of the work item to update</param>
+        /// <param name="bypassRules">Do not enforce the work item type rules on this update.</param>
+        /// <param name="suppressNotifications">Do not fire any notifications for this change.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WitBatchResponse> UpdateWorkItems(this WorkItemTrackingHttpClient workItemTrackingHttpClient, JsonPatchDocument updateDocument, IEnumerable<int> ids, bool? bypassRules = null, bool? suppressNotifications = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (updateDocument == null) throw new ArgumentNullException(nameof(updateDocument));
+            if (ids == null) throw new ArgumentNullException(nameof(ids));
+
+            return workItemTrackingHttpClient.ExecuteBatchRequests(
+                ids.Select(id => workItemTrackingHttpClient.CreateWorkItemBatchRequest(id, updateDocument, bypassRules ?? false, suppressNotifications ?? false)),
+                userState);
         }
 
         /// <summary>
