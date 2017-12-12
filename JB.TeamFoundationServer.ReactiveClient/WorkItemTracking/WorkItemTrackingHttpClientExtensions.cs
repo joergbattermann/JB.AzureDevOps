@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using Microsoft.TeamFoundation.Core.WebApi;
+using Microsoft.TeamFoundation.Core.WebApi.Types;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
@@ -36,7 +37,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
             if (uploadStream == null) throw new ArgumentNullException(nameof(uploadStream));
-
+            
             return Observable.FromAsync(token => workItemTrackingHttpClient.CreateAttachmentAsync(uploadStream, fileName, uploadType, areaPath, userState, token));
         }
 
@@ -490,6 +491,43 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
+        /// Gets the work items for the provided <paramref name="workItemReferences" />.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The <see cref="WorkItemTrackingHttpClient" /> to use.</param>
+        /// <param name="workItemReferences">The workitem references.</param>
+        /// <param name="fields">The work item fields to retrieve.</param>
+        /// <param name="asOf">The 'As of time' of the work item to retrieve.</param>
+        /// <param name="expand">The <see cref="WorkItemExpand"/> to apply to the underlying client.</param>
+        /// <param name="errorPolicy">The error policy.</param>
+        /// <param name="userState">The userState object.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItem> GetWorkItems(this WorkItemTrackingHttpClient workItemTrackingHttpClient, IEnumerable<WorkItemReference> workItemReferences, IEnumerable<string> fields = null,
+            DateTime? asOf = null,
+            WorkItemExpand? expand = null,
+            WorkItemErrorPolicy? errorPolicy = null,
+            object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            if (workItemReferences == null)
+            {
+                return Observable.Empty<WorkItem>();
+            }
+
+            // else
+            return workItemTrackingHttpClient.GetWorkItems(
+                workItemReferences
+                    .Select(reference => reference.Id)
+                    .Distinct(),
+                fields,
+                asOf,
+                expand,
+                errorPolicy,
+                userState);
+        }
+
+        /// <summary>
         /// Gets the work item relation type for the provided <paramref name="workItemLinkTypeReferenceName"/>.
         /// </summary>
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
@@ -608,6 +646,132 @@ namespace JB.TeamFoundationServer.WorkItemTracking
                     ? Observable.FromAsync(token => workItemTrackingHttpClient.GetFieldsAsync(projectNameOrId, expand, userState, token))
                     : Observable.FromAsync(token => workItemTrackingHttpClient.GetFieldsAsync(expand, userState, token)))
                 .SelectMany(workItemUpdates => workItemUpdates);
+        }
+
+        /// <summary>
+        /// Gets the query result for the provided <paramref name="wiql"/>.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="wiql">The wiql / query string to run.</param>
+        /// <param name="timePrecision">[true] if time precision is allowed in the date time comparisons.</param>
+        /// <param name="top">The maximum amount of results to return.</param>
+        /// <param name="userState">State of the user.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">
+        /// workItemTrackingHttpClient
+        /// or
+        /// wiql
+        /// </exception>
+        public static IObservable<WorkItemQueryResult> GetWiqlQueryResult(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Wiql wiql, bool? timePrecision = null, int? top = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (wiql == null) throw new ArgumentNullException(nameof(wiql));
+            return Observable.FromAsync(token => workItemTrackingHttpClient.QueryByWiqlAsync(wiql, timePrecision, top, userState, token));
+        }
+
+        /// <summary>
+        /// Gets the query result for the provided <paramref name="wiql" />.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="wiql">The wiql / query string to run.</param>
+        /// <param name="projectId">The project (identifier) to filter the results to.</param>
+        /// <param name="timePrecision">[true] if time precision is allowed in the date time comparisons.</param>
+        /// <param name="top">The maximum amount of results to return.</param>
+        /// <param name="userState">State of the user.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient
+        /// or
+        /// wiql</exception>
+        public static IObservable<WorkItemQueryResult> GetWiqlQueryResult(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Wiql wiql, Guid projectId, bool? timePrecision = null, int? top = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (wiql == null) throw new ArgumentNullException(nameof(wiql));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.QueryByWiqlAsync(wiql, projectId, timePrecision, top, userState, token));
+        }
+
+        /// <summary>
+        /// Gets the query result for the provided <paramref name="wiql" />.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="wiql">The wiql / query string to run.</param>
+        /// <param name="teamContext">The team context to filter the results for.</param>
+        /// <param name="timePrecision">[true] if time precision is allowed in the date time comparisons.</param>
+        /// <param name="top">The maximum amount of results to return.</param>
+        /// <param name="userState">State of the user.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient
+        /// or
+        /// wiql</exception>
+        public static IObservable<WorkItemQueryResult> GetWiqlQueryResult(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Wiql wiql, TeamContext teamContext, bool? timePrecision = null, int? top = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (wiql == null) throw new ArgumentNullException(nameof(wiql));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.QueryByWiqlAsync(wiql, teamContext, timePrecision, top, userState, token));
+        }
+
+
+
+        /// <summary>
+        /// Gets the query result for the provided <paramref name="queryId"/>.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="queryId">The stored query (identifier) to run.</param>
+        /// <param name="timePrecision">[true] if time precision is allowed in the date time comparisons.</param>
+        /// <param name="userState">State of the user.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">
+        /// workItemTrackingHttpClient
+        /// or
+        /// wiql
+        /// </exception>
+        public static IObservable<WorkItemQueryResult> GetStoredQueryResult(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid queryId, bool? timePrecision = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (queryId == null) throw new ArgumentNullException(nameof(queryId));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.QueryByIdAsync(queryId, timePrecision, userState, token));
+        }
+
+        /// <summary>
+        /// Gets the query result for the provided <paramref name="queryId" />.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="queryId">The stored query (identifier) to run.</param>
+        /// <param name="projectId">The project (identifier) to filter the results to.</param>
+        /// <param name="timePrecision">[true] if time precision is allowed in the date time comparisons.</param>
+        /// <param name="userState">State of the user.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient
+        /// or
+        /// wiql</exception>
+        public static IObservable<WorkItemQueryResult> GetStoredQueryResult(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid queryId, Guid projectId, bool? timePrecision = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (queryId == null) throw new ArgumentNullException(nameof(queryId));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.QueryByIdAsync(projectId, queryId, timePrecision, userState, token));
+        }
+
+        /// <summary>
+        /// Gets the query result for the provided <paramref name="queryId" />.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="queryId">The stored query (identifier) to run.</param>
+        /// <param name="teamContext">The team context to filter the results for.</param>
+        /// <param name="timePrecision">[true] if time precision is allowed in the date time comparisons.</param>
+        /// <param name="userState">State of the user.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient
+        /// or
+        /// wiql</exception>
+        public static IObservable<WorkItemQueryResult> GetStoredQueryResult(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid queryId, TeamContext teamContext, bool? timePrecision = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (queryId == null) throw new ArgumentNullException(nameof(queryId));
+
+            return Observable.FromAsync(token => workItemTrackingHttpClient.QueryByIdAsync(teamContext, queryId, timePrecision, userState, token));
         }
     }
 }
