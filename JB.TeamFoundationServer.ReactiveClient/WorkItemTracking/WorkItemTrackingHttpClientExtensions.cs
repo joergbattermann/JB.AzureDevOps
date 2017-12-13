@@ -711,7 +711,72 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             return Observable.FromAsync(token => workItemTrackingHttpClient.QueryByWiqlAsync(wiql, teamContext, timePrecision, top, userState, token));
         }
 
+        /// <summary>
+        /// Gets the query result for the provided <paramref name="wiql"/>.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="wiql">The wiql / query string to run.</param>
+        /// <param name="timePrecision">[true] if time precision is allowed in the date time comparisons.</param>
+        /// <param name="top">The maximum amount of results to return.</param>
+        /// <param name="userState">State of the user.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">
+        /// workItemTrackingHttpClient
+        /// or
+        /// wiql
+        /// </exception>
+        public static IObservable<WorkItemQueryResult> GetWiqlQueryResult(this WorkItemTrackingHttpClient workItemTrackingHttpClient, string wiql, bool? timePrecision = null, int? top = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (wiql == null) throw new ArgumentNullException(nameof(wiql));
+            if (string.IsNullOrWhiteSpace(wiql)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(wiql));
 
+            return workItemTrackingHttpClient.GetWiqlQueryResult(new Wiql { Query = wiql }, timePrecision, top, userState);
+        }
+
+        /// <summary>
+        /// Gets the query result for the provided <paramref name="wiql" />.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="wiql">The wiql / query string to run.</param>
+        /// <param name="projectId">The project (identifier) to filter the results to.</param>
+        /// <param name="timePrecision">[true] if time precision is allowed in the date time comparisons.</param>
+        /// <param name="top">The maximum amount of results to return.</param>
+        /// <param name="userState">State of the user.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient
+        /// or
+        /// wiql</exception>
+        public static IObservable<WorkItemQueryResult> GetWiqlQueryResult(this WorkItemTrackingHttpClient workItemTrackingHttpClient, string wiql, Guid projectId, bool? timePrecision = null, int? top = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (wiql == null) throw new ArgumentNullException(nameof(wiql));
+            if (string.IsNullOrWhiteSpace(wiql)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(wiql));
+
+            return workItemTrackingHttpClient.GetWiqlQueryResult(new Wiql { Query = wiql }, projectId, timePrecision, top, userState);
+        }
+
+        /// <summary>
+        /// Gets the query result for the provided <paramref name="wiql" />.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="wiql">The wiql / query string to run.</param>
+        /// <param name="teamContext">The team context to filter the results for.</param>
+        /// <param name="timePrecision">[true] if time precision is allowed in the date time comparisons.</param>
+        /// <param name="top">The maximum amount of results to return.</param>
+        /// <param name="userState">State of the user.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient
+        /// or
+        /// wiql</exception>
+        public static IObservable<WorkItemQueryResult> GetWiqlQueryResult(this WorkItemTrackingHttpClient workItemTrackingHttpClient, string wiql, TeamContext teamContext, bool? timePrecision = null, int? top = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (wiql == null) throw new ArgumentNullException(nameof(wiql));
+            if (string.IsNullOrWhiteSpace(wiql)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(wiql));
+
+            return workItemTrackingHttpClient.GetWiqlQueryResult(new Wiql { Query = wiql }, teamContext, timePrecision, top, userState);
+        }
 
         /// <summary>
         /// Gets the query result for the provided <paramref name="queryId"/>.
