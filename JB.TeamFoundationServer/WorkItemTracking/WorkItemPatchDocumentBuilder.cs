@@ -299,10 +299,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="value">The value to set.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException">fieldReferenceName - fieldReferenceName</exception>
-        public new virtual T AddOrUpdateFieldValue(string fieldReferenceName, object value)
-        {
-            return base.AddOrUpdateFieldValue(fieldReferenceName, value) as T;
-        }
+        public new virtual T AddOrUpdateFieldValue(string fieldReferenceName, object value) => base.AddOrUpdateFieldValue(fieldReferenceName, value) as T;
 
         /// <summary>
         /// Adds a history entry for the provided <paramref name="comment"/>.
@@ -310,10 +307,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="comment">The comment to add.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException">comment - comment</exception>
-        public new virtual T AddComment(string comment)
-        {
-            return base.AddComment(comment) as T;
-        }
+        public new virtual T AddComment(string comment) => base.AddComment(comment) as T;
 
         /// <summary>
         /// Adds a forward relation of the given <paramref name="workItemLinkTypeReferenceName" /> type pointing to the provided <paramref name="targetWorkItemUrl" /> to this <see cref="WorkItemPatchDocumentBuilder" /> and ultimately the resulting <see cref="JsonPatchOperation"/>.
@@ -324,10 +318,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <returns></returns>
         /// <exception cref="ArgumentException">fieldReferenceName - fieldReferenceName</exception>
         public new virtual T AddForwardRelation(string targetWorkItemUrl, string workItemLinkTypeReferenceName,
-            string comment = "")
-        {
-            return base.AddForwardRelation(targetWorkItemUrl, workItemLinkTypeReferenceName, comment) as T;
-        }
+            string comment = "") => base.AddForwardRelation(targetWorkItemUrl, workItemLinkTypeReferenceName, comment) as T;
 
         /// <summary>
         /// Adds a reverse relation of the given <paramref name="workItemLinkTypeReferenceName" /> type pointing to the provided <paramref name="targetWorkItemUrl" /> to this <see cref="WorkItemPatchDocumentBuilder" /> and ultimately the resulting <see cref="JsonPatchOperation"/>.
@@ -338,10 +329,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <returns></returns>
         /// <exception cref="ArgumentException">fieldReferenceName - fieldReferenceName</exception>
         public new virtual T AddReverseRelation(string targetWorkItemUrl, string workItemLinkTypeReferenceName,
-            string comment = "")
-        {
-            return base.AddReverseRelation(targetWorkItemUrl, workItemLinkTypeReferenceName, comment) as T;
-        }
+            string comment = "") => base.AddReverseRelation(targetWorkItemUrl, workItemLinkTypeReferenceName, comment) as T;
 
         /// <summary>
         /// Adds an attachment to a work item by using the <paramref name="attachmentReference"/> and optionally setting the attachment's <paramref name="comment"/>.
@@ -350,10 +338,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="comment">The (optional) attachment comment.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">attachmentReference</exception>
-        public new virtual T AddAttachment(AttachmentReference attachmentReference, string comment = "")
-        {
-            return base.AddAttachment(attachmentReference, comment) as T;
-        }
+        public new virtual T AddAttachment(AttachmentReference attachmentReference, string comment = "") => base.AddAttachment(attachmentReference, comment) as T;
 
         /// <summary>
         /// Adds a hyperlink to a work item by using the <paramref name="hyperLink"/> and optionally setting the links's <paramref name="comment"/>.
@@ -362,10 +347,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="comment">The (optional) attachment comment.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">attachmentReference</exception>
-        public new virtual T AddHyperlink(Uri hyperLink, string comment = "")
-        {
-            return base.AddHyperlink(hyperLink, comment) as T;
-        }
+        public new virtual T AddHyperlink(Uri hyperLink, string comment = "") => base.AddHyperlink(hyperLink, comment) as T;
 
         /// <summary>
         /// Adds an artifucat link to a work item by using the <paramref name="artifactLink"/> and optionally setting the links's <paramref name="comment"/>.
@@ -374,10 +356,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="comment">The (optional) artifact link comment.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">attachmentReference</exception>
-        public new virtual T AddArtifactLink(ArtifactLink artifactLink, string comment = "")
-        {
-            return base.AddArtifactLink(artifactLink, comment) as T;
-        }
+        public new virtual T AddArtifactLink(ArtifactLink artifactLink, string comment = "") => base.AddArtifactLink(artifactLink, comment) as T;
 
         /// <summary>
         /// Removes the field values for the provided <paramref name="fieldReferenceName"/> from this <see cref="WorkItemPatchDocumentBuilder"/> and ultimately the resulting <see cref="JsonPatchOperation"/>.
@@ -385,9 +364,6 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="fieldReferenceName">Reference Name of the work item field.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException">fieldReferenceName - fieldReferenceName</exception>
-        public new virtual T RemoveFieldValue(string fieldReferenceName)
-        {
-            return base.RemoveFieldValue(fieldReferenceName) as T;
-        }
+        public new virtual T RemoveFieldValue(string fieldReferenceName) => base.RemoveFieldValue(fieldReferenceName) as T;
     }
 }

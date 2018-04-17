@@ -43,17 +43,17 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
-        /// Removes the relation for the given <paramref name="relationid"/>.
+        /// Removes the relation for the given <paramref name="relationId"/>.
         /// </summary>
-        /// <param name="relationid">The relation identifier.</param>
+        /// <param name="relationId">The relation identifier.</param>
         /// <returns></returns>
-        public virtual UpdateWorkItemPatchDocumentBuilder RemoveRelation(int relationid)
+        public virtual UpdateWorkItemPatchDocumentBuilder RemoveRelation(int relationId)
         {
             PatchDocument.Add(
                 new JsonPatchOperation()
                 {
                     Operation = Microsoft.VisualStudio.Services.WebApi.Patch.Operation.Remove,
-                    Path = "/relations/" + relationid
+                    Path = "/relations/" + relationId
                 }
             );
 
