@@ -7,6 +7,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking.WellKnownWorkItemFieldReferen
         public const string HyperLinkCount = "System.HyperLinkCount";
         public const string RelatedLinkCount = "System.RelatedLinkCount";
 
+        public const string LinkType = "System.Links.LinkType";
         public const string LinkComment = "System.Links.Comment";
         public const string LinkDescription = "System.Links.Description";
     }

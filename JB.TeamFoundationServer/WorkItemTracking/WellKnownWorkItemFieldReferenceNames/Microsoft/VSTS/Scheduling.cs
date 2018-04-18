@@ -9,6 +9,7 @@
         public const string StoryPoints = "Microsoft.VSTS.Scheduling.StoryPoints";
         public const string Size = "Microsoft.VSTS.Scheduling.Size";
         public const string RemainingWork = "Microsoft.VSTS.Scheduling.RemainingWork";
+        public const string OriginalEstimate = "Microsoft.VSTS.Scheduling.OriginalEstimate";
         
         public const string StartDate = "Microsoft.VSTS.Scheduling.StartDate";
         public const string TargetDate = "Microsoft.VSTS.Scheduling.TargetDate";
