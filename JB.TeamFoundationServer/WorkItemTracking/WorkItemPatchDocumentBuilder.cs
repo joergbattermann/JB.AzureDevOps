@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi.Patch;
@@ -216,15 +217,28 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             if (string.IsNullOrWhiteSpace(fieldReferenceName))
                 throw new ArgumentException($"Value for '{nameof(fieldReferenceName)}' cannot be null or whitespace.", nameof(fieldReferenceName));
 
-            PatchDocument.Add(
-                new JsonPatchOperation()
-                {
-                    Operation = Operation.Add,
-                    Path = GetPathForFieldReferenceName(fieldReferenceName),
-                    Value = value
-                }
-            );
+            var pathForFieldReferenceName = GetPathForFieldReferenceName(fieldReferenceName);
 
+            var existingAddOperationForField = PatchDocument.FirstOrDefault(patchOperation =>
+                patchOperation.Operation == Operation.Add &&
+                string.Equals(patchOperation.Path, pathForFieldReferenceName, StringComparison.OrdinalIgnoreCase));
+
+            if (existingAddOperationForField != null)
+            {
+                existingAddOperationForField.Value = value;
+            }
+            else
+            {
+                PatchDocument.Add(
+                    new JsonPatchOperation()
+                    {
+                        Operation = Operation.Add,
+                        Path = GetPathForFieldReferenceName(fieldReferenceName),
+                        Value = value
+                    }
+                );
+            }
+            
             return this;
         }
 
