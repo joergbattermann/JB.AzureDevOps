@@ -4,6 +4,7 @@
     {
         public const string Id = "System.Id";
         public const string Title = "System.Title";
+        public const string AssignedTo = "System.AssignedTo";
         public const string AreaPath = "System.AreaPath";
         public const string TeamProject = "System.TeamProject";
         public const string IterationPath = "System.IterationPath";
