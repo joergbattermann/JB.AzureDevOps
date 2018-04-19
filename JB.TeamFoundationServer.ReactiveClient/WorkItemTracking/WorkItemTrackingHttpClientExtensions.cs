@@ -326,15 +326,17 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// </summary>
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
         /// <param name="creationDocument">The JSON Patch document representing the new work item.</param>
-        /// <param name="workItemType">The work item type of the work item to create</param>
         /// <param name="projectId">The project identifier.</param>
+        /// <param name="workItemType">The work item type of the work item to create</param>
         /// <param name="validateOnly">Indicate if you only want to validate the changes without saving the work item</param>
         /// <param name="bypassRules">Do not enforce the work item type rules on this update</param>
         /// <param name="suppressNotifications">Do not fire any notifications for this change</param>
         /// <param name="userState">The userState object.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
-        public static IObservable<WorkItem> CreateWorkItem(this WorkItemTrackingHttpClient workItemTrackingHttpClient, JsonPatchDocument creationDocument, string workItemType, Guid projectId,  bool? validateOnly = null, bool? bypassRules = null, bool? suppressNotifications = null, object userState = null)
+        public static IObservable<WorkItem> CreateWorkItem(this WorkItemTrackingHttpClient workItemTrackingHttpClient,
+            JsonPatchDocument creationDocument, Guid projectId, string workItemType, bool? validateOnly = null,
+            bool? bypassRules = null, bool? suppressNotifications = null, object userState = null)
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
             if (creationDocument == null) throw new ArgumentNullException(nameof(creationDocument));
@@ -347,8 +349,8 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// </summary>
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
         /// <param name="title">The title of the work item to create.</param>
-        /// <param name="workItemType">The work item type of the work item to create</param>
         /// <param name="projectId">The project identifier.</param>
+        /// <param name="workItemType">The work item type of the work item to create</param>
         /// <param name="validateOnly">Indicate if you only want to validate the changes without saving the work item</param>
         /// <param name="bypassRules">Do not enforce the work item type rules on this update</param>
         /// <param name="suppressNotifications">Do not fire any notifications for this change</param>
@@ -359,7 +361,10 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <exception cref="ArgumentException">Value cannot be null or whitespace. - title
         /// or
         /// Value cannot be null or whitespace. - workItemType</exception>
-        public static IObservable<WorkItem> CreateWorkItem(this WorkItemTrackingHttpClient workItemTrackingHttpClient, string title, string workItemType, Guid projectId, bool? validateOnly = null, bool? bypassRules = null, bool? suppressNotifications = null, object userState = null, params KeyValuePair<string, object>[] fieldsAndValues)
+        public static IObservable<WorkItem> CreateWorkItem(this WorkItemTrackingHttpClient workItemTrackingHttpClient,
+            string title, Guid projectId, string workItemType, bool? validateOnly = null, bool? bypassRules = null,
+            bool? suppressNotifications = null, object userState = null,
+            params KeyValuePair<string, object>[] fieldsAndValues)
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
             if (string.IsNullOrWhiteSpace(title))
