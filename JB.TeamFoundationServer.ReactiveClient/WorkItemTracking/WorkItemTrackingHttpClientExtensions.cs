@@ -691,7 +691,6 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             Guid projectId,
             string workItemRelationTypeReferenceName,
             string targetWorkItemTypeName = "",
-            bool? timePrecision = null,
             int? count = null,
             IEnumerable<string> fields = null,
             DateTime? asOf = null,
@@ -713,10 +712,10 @@ namespace JB.TeamFoundationServer.WorkItemTracking
                                         Query = $"SELECT [System.Id] FROM workitemLinks WHERE ([Source].[System.Id] = {workItem.Id ?? 0}) AND ([System.Links.LinkType] = '{workItemRelationTypeReferenceName}') {(!string.IsNullOrWhiteSpace(targetWorkItemTypeName) ? $"AND ([Target].[System.WorkItemType] = '{targetWorkItemTypeName}')" : string.Empty)} ORDER BY [System.Id] MODE (MustContain)"
                                     },
                                     projectId,
-                                    timePrecision,
-                                    count,
-                                    userState,
-                                    token))
+                                    timePrecision: null,
+                                    top: count,
+                                    userState: userState,
+                                    cancellationToken: token))
                         .SelectMany(workItemQueryResult => workItemTrackingHttpClient.GetLinkedTargetWorkItems(
                             workItemQueryResult.WorkItemRelations,
                             workItemRelationTypeReferenceName,
