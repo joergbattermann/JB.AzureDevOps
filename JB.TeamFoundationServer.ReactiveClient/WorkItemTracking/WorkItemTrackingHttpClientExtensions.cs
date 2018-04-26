@@ -562,6 +562,147 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
+        /// Gets the linked source work items.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="workItemLinks">The work item links.</param>
+        /// <param name="workItemRelationTypeReferenceName">Name of the work item relation type reference.</param>
+        /// <param name="fields">The fields.</param>
+        /// <param name="asOf">As of.</param>
+        /// <param name="expand">The expand.</param>
+        /// <param name="errorPolicy">The error policy.</param>
+        /// <param name="userState">State of the user.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItem> GetLinkedSourceWorkItems(this WorkItemTrackingHttpClient workItemTrackingHttpClient,
+            IEnumerable<WorkItemLink> workItemLinks,
+            string workItemRelationTypeReferenceName = "",
+            IEnumerable<string> fields = null,
+            DateTime? asOf = null,
+            WorkItemExpand? expand = null,
+            WorkItemErrorPolicy? errorPolicy = null,
+            object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            if (workItemLinks == null)
+            {
+                return Observable.Empty<WorkItem>();
+            }
+
+            // else
+            return Observable.Create<WorkItem>(observer =>
+            {
+                return workItemTrackingHttpClient.GetWorkItems(
+                        workItemLinks
+                            .Where(workItemLink => !string.IsNullOrWhiteSpace(workItemLink.Rel)
+                                                   && workItemLink.Source != null
+                                                   && (string.IsNullOrWhiteSpace(workItemRelationTypeReferenceName) ||
+                                                       string.Equals(workItemLink.Rel,
+                                                           workItemRelationTypeReferenceName,
+                                                           StringComparison.OrdinalIgnoreCase)))
+                            .Select(workItemLink => workItemLink.Source.Id)
+                            .Distinct(),
+                        fields,
+                        asOf,
+                        expand,
+                        errorPolicy,
+                        userState)
+                    .Subscribe(observer);
+            });
+        }
+
+        /// <summary>
+        /// Gets the linked source work items.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="workItemLinks">The work item links.</param>
+        /// <param name="workItemRelationTypeReferenceName">Name of the work item relation type reference.</param>
+        /// <param name="fields">The fields.</param>
+        /// <param name="asOf">As of.</param>
+        /// <param name="expand">The expand.</param>
+        /// <param name="errorPolicy">The error policy.</param>
+        /// <param name="userState">State of the user.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
+        public static IObservable<WorkItem> GetLinkedTargetWorkItems(this WorkItemTrackingHttpClient workItemTrackingHttpClient,
+            IEnumerable<WorkItemLink> workItemLinks,
+            string workItemRelationTypeReferenceName = "",
+            IEnumerable<string> fields = null,
+            DateTime? asOf = null,
+            WorkItemExpand? expand = null,
+            WorkItemErrorPolicy? errorPolicy = null,
+            object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+
+            if (workItemLinks == null)
+            {
+                return Observable.Empty<WorkItem>();
+            }
+
+            // else
+            return Observable.Create<WorkItem>(observer =>
+            {
+                return workItemTrackingHttpClient.GetWorkItems(
+                        workItemLinks
+                            .Where(workItemLink => !string.IsNullOrWhiteSpace(workItemLink.Rel)
+                                                   && workItemLink.Target != null
+                                                   && (string.IsNullOrWhiteSpace(workItemRelationTypeReferenceName) ||
+                                                       string.Equals(workItemLink.Rel,
+                                                           workItemRelationTypeReferenceName,
+                                                           StringComparison.OrdinalIgnoreCase)))
+                            .Select(workItemLink => workItemLink.Target.Id)
+                            .Distinct(),
+                        fields,
+                        asOf,
+                        expand,
+                        errorPolicy,
+                        userState)
+                    .Subscribe(observer);
+            });
+        }
+
+        /// <summary>
+        /// Gets the related work items for the <paramref name="workItem" /> of the given <paramref name="workItemRelationTypeReferenceName" />.
+        /// </summary>
+        /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
+        /// <param name="workItem">The work item.</param>
+        /// <param name="projectId">Project ID</param>
+        /// <param name="workItemRelationTypeReferenceName">Name of the work item relation type reference. i.e. 'System.LinkTypes.Hierarchy-Forward'.</param>
+        /// <param name="targetWorkItemTypeName">Name of the target work item type.</param>
+        /// <param name="timePrecision">Whether or not to use time precision.</param>
+        /// <param name="count">The max number of results to return.</param>
+        /// <param name="userState">State of the user.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">
+        /// workItemTrackingHttpClient
+        /// or
+        /// workItem
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">workItemRelationTypeReferenceName</exception>
+        public static IObservable<WorkItem> GetRelatedWorkItems(this WorkItemTrackingHttpClient workItemTrackingHttpClient, WorkItem workItem, Guid projectId, string workItemRelationTypeReferenceName, string targetWorkItemTypeName = "", bool? timePrecision = null, int? count = null, object userState = null)
+        {
+            if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+            if (string.IsNullOrWhiteSpace(workItemRelationTypeReferenceName)) throw new ArgumentOutOfRangeException(nameof(workItemRelationTypeReferenceName));
+
+            return Observable.FromAsync(
+                    token => workItemTrackingHttpClient
+                        .QueryByWiqlAsync(
+                            new Wiql()
+                            {
+                                Query = $"SELECT [System.Id] FROM workitemLinks WHERE ([Source].[System.Id] = {workItem.Id ?? 0}) AND ([System.Links.LinkType] = '{workItemRelationTypeReferenceName}') {(!string.IsNullOrWhiteSpace(targetWorkItemTypeName) ? $"AND ([Target].[System.WorkItemType] = '{targetWorkItemTypeName}')" : string.Empty)} ORDER BY [System.Id] MODE (MustContain)"
+                            },
+                            projectId,
+                            timePrecision,
+                            count,
+                            userState,
+                            token))
+                .SelectMany(workItemQueryResult => workItemTrackingHttpClient.GetWorkItems(workItemQueryResult.WorkItems));
+        }
+
+        /// <summary>
         /// Gets the work item deltas between revisions.
         /// </summary>
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
