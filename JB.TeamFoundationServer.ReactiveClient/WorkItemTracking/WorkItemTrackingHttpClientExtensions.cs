@@ -567,9 +567,9 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
         /// <param name="workItemLinks">The work item links.</param>
         /// <param name="workItemRelationTypeReferenceName">Name of the work item relation type reference.</param>
-        /// <param name="fields">The fields.</param>
-        /// <param name="asOf">As of.</param>
-        /// <param name="expand">The expand.</param>
+        /// <param name="fields">The work item fields to retrieve.</param>
+        /// <param name="asOf">The 'As of time' of the work item to retrieve.</param>
+        /// <param name="expand">The <see cref="WorkItemExpand"/> to apply to the underlying client.</param>
         /// <param name="errorPolicy">The error policy.</param>
         /// <param name="userState">State of the user.</param>
         /// <returns></returns>
@@ -618,9 +618,9 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
         /// <param name="workItemLinks">The work item links.</param>
         /// <param name="workItemRelationTypeReferenceName">Name of the work item relation type reference.</param>
-        /// <param name="fields">The fields.</param>
-        /// <param name="asOf">As of.</param>
-        /// <param name="expand">The expand.</param>
+        /// <param name="fields">The work item fields to retrieve.</param>
+        /// <param name="asOf">The 'As of time' of the work item to retrieve.</param>
+        /// <param name="expand">The <see cref="WorkItemExpand"/> to apply to the underlying client.</param>
         /// <param name="errorPolicy">The error policy.</param>
         /// <param name="userState">State of the user.</param>
         /// <returns></returns>
@@ -673,6 +673,10 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="targetWorkItemTypeName">Name of the target work item type.</param>
         /// <param name="timePrecision">Whether or not to use time precision.</param>
         /// <param name="count">The max number of results to return.</param>
+        /// <param name="fields">The work item fields to retrieve.</param>
+        /// <param name="asOf">The 'As of time' of the work item to retrieve.</param>
+        /// <param name="expand">The <see cref="WorkItemExpand"/> to apply to the underlying client.</param>
+        /// <param name="errorPolicy">The error policy.</param>
         /// <param name="userState">State of the user.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">
@@ -681,25 +685,48 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// workItem
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">workItemRelationTypeReferenceName</exception>
-        public static IObservable<WorkItem> GetRelatedWorkItems(this WorkItemTrackingHttpClient workItemTrackingHttpClient, WorkItem workItem, Guid projectId, string workItemRelationTypeReferenceName, string targetWorkItemTypeName = "", bool? timePrecision = null, int? count = null, object userState = null)
+        public static IObservable<WorkItem> GetRelatedWorkItems(
+            this WorkItemTrackingHttpClient workItemTrackingHttpClient,
+            WorkItem workItem,
+            Guid projectId,
+            string workItemRelationTypeReferenceName,
+            string targetWorkItemTypeName = "",
+            bool? timePrecision = null,
+            int? count = null,
+            IEnumerable<string> fields = null,
+            DateTime? asOf = null,
+            WorkItemExpand? expand = null,
+            WorkItemErrorPolicy? errorPolicy = null,
+            object userState = null)
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
             if (workItem == null) throw new ArgumentNullException(nameof(workItem));
             if (string.IsNullOrWhiteSpace(workItemRelationTypeReferenceName)) throw new ArgumentOutOfRangeException(nameof(workItemRelationTypeReferenceName));
 
-            return Observable.FromAsync(
-                    token => workItemTrackingHttpClient
-                        .QueryByWiqlAsync(
-                            new Wiql()
-                            {
-                                Query = $"SELECT [System.Id] FROM workitemLinks WHERE ([Source].[System.Id] = {workItem.Id ?? 0}) AND ([System.Links.LinkType] = '{workItemRelationTypeReferenceName}') {(!string.IsNullOrWhiteSpace(targetWorkItemTypeName) ? $"AND ([Target].[System.WorkItemType] = '{targetWorkItemTypeName}')" : string.Empty)} ORDER BY [System.Id] MODE (MustContain)"
-                            },
-                            projectId,
-                            timePrecision,
-                            count,
-                            userState,
-                            token))
-                .SelectMany(workItemQueryResult => workItemTrackingHttpClient.GetWorkItems(workItemQueryResult.WorkItems));
+            return Observable.Create<WorkItem>(observer =>
+            {
+                return Observable.FromAsync(
+                            token => workItemTrackingHttpClient
+                                .QueryByWiqlAsync(
+                                    new Wiql()
+                                    {
+                                        Query = $"SELECT [System.Id] FROM workitemLinks WHERE ([Source].[System.Id] = {workItem.Id ?? 0}) AND ([System.Links.LinkType] = '{workItemRelationTypeReferenceName}') {(!string.IsNullOrWhiteSpace(targetWorkItemTypeName) ? $"AND ([Target].[System.WorkItemType] = '{targetWorkItemTypeName}')" : string.Empty)} ORDER BY [System.Id] MODE (MustContain)"
+                                    },
+                                    projectId,
+                                    timePrecision,
+                                    count,
+                                    userState,
+                                    token))
+                        .SelectMany(workItemQueryResult => workItemTrackingHttpClient.GetLinkedTargetWorkItems(
+                            workItemQueryResult.WorkItemRelations,
+                            workItemRelationTypeReferenceName,
+                            fields,
+                            asOf,
+                            expand,
+                            errorPolicy,
+                            userState))
+                    .Subscribe(observer);
+            });
         }
 
         /// <summary>
