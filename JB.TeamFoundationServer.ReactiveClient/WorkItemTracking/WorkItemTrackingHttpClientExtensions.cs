@@ -670,7 +670,6 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="workItem">The work item.</param>
         /// <param name="projectId">Project ID</param>
         /// <param name="workItemRelationTypeReferenceName">Name of the work item relation type reference. i.e. 'System.LinkTypes.Hierarchy-Forward'.</param>
-        /// <param name="targetWorkItemTypeName">Name of the target work item type.</param>
         /// <param name="count">The max number of results to return.</param>
         /// <param name="fields">The work item fields to retrieve.</param>
         /// <param name="asOf">The 'As of time' of the work item to retrieve.</param>
@@ -687,7 +686,6 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             WorkItem workItem,
             Guid projectId,
             string workItemRelationTypeReferenceName,
-            string targetWorkItemTypeName = "",
             int? count = null,
             IEnumerable<string> fields = null,
             DateTime? asOf = null,
@@ -699,30 +697,14 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             if (workItem == null) throw new ArgumentNullException(nameof(workItem));
             if (string.IsNullOrWhiteSpace(workItemRelationTypeReferenceName)) throw new ArgumentOutOfRangeException(nameof(workItemRelationTypeReferenceName));
 
-            return Observable.Create<WorkItem>(observer =>
-            {
-                return Observable.FromAsync(
-                            token => workItemTrackingHttpClient
-                                .QueryByWiqlAsync(
-                                    new Wiql()
-                                    {
-                                        Query = $"SELECT [System.Id] FROM workitemLinks WHERE ([Source].[System.Id] = {workItem.Id ?? 0}) AND ([System.Links.LinkType] = '{workItemRelationTypeReferenceName}') {(!string.IsNullOrWhiteSpace(targetWorkItemTypeName) ? $"AND ([Target].[System.WorkItemType] = '{targetWorkItemTypeName}')" : string.Empty)} ORDER BY [System.Id] MODE (MustContain)"
-                                    },
-                                    projectId,
-                                    timePrecision: null,
-                                    top: count,
-                                    userState: userState,
-                                    cancellationToken: token))
-                        .SelectMany(workItemQueryResult => workItemTrackingHttpClient.GetLinkedTargetWorkItems(
-                            workItemQueryResult.WorkItemRelations,
-                            workItemRelationTypeReferenceName,
-                            fields,
-                            asOf,
-                            expand,
-                            errorPolicy,
-                            userState))
-                    .Subscribe(observer);
-            });
+            return Observable.Create<WorkItem>(observer => workItemTrackingHttpClient.GetWorkItems(
+                    workItem.GetRelatedWorkItemIds(workItemRelationTypeReferenceName),
+                    fields,
+                    asOf,
+                    expand,
+                    errorPolicy,
+                    userState)
+                .Subscribe(observer));
         }
 
         /// <summary>
@@ -739,7 +721,8 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
 
-            return Observable.FromAsync(token => workItemTrackingHttpClient.GetUpdatesAsync(workItemId, count, skip, userState, token))
+            return Observable.FromAsync(token =>
+                    workItemTrackingHttpClient.GetUpdatesAsync(workItemId, count, skip, userState, token))
                 .SelectMany(workItemUpdates => workItemUpdates);
         }
 
@@ -898,7 +881,9 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             if (wiql == null) throw new ArgumentNullException(nameof(wiql));
             if (string.IsNullOrWhiteSpace(wiql)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(wiql));
 
-            return workItemTrackingHttpClient.GetWiqlQueryResult(new Wiql { Query = wiql }, timePrecision, top, userState);
+            return Observable.Create<WorkItemQueryResult>(observer => workItemTrackingHttpClient
+                .GetWiqlQueryResult(new Wiql {Query = wiql}, timePrecision, top, userState)
+                .Subscribe(observer));
         }
 
         /// <summary>
@@ -920,7 +905,9 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             if (wiql == null) throw new ArgumentNullException(nameof(wiql));
             if (string.IsNullOrWhiteSpace(wiql)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(wiql));
 
-            return workItemTrackingHttpClient.GetWiqlQueryResult(new Wiql { Query = wiql }, projectId, timePrecision, top, userState);
+            return Observable.Create<WorkItemQueryResult>(observer => workItemTrackingHttpClient
+                .GetWiqlQueryResult(new Wiql { Query = wiql }, projectId, timePrecision, top, userState)
+                .Subscribe(observer));
         }
 
         /// <summary>
@@ -942,7 +929,9 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             if (wiql == null) throw new ArgumentNullException(nameof(wiql));
             if (string.IsNullOrWhiteSpace(wiql)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(wiql));
 
-            return workItemTrackingHttpClient.GetWiqlQueryResult(new Wiql { Query = wiql }, teamContext, timePrecision, top, userState);
+            return Observable.Create<WorkItemQueryResult>(observer => workItemTrackingHttpClient
+                .GetWiqlQueryResult(new Wiql { Query = wiql }, teamContext, timePrecision, top, userState)
+                .Subscribe(observer));
         }
 
         /// <summary>
