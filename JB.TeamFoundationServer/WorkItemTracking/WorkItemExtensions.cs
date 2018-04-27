@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
+using Microsoft.VisualStudio.Services.WebApi;
 
 namespace JB.TeamFoundationServer.WorkItemTracking
 {
@@ -8,6 +11,168 @@ namespace JB.TeamFoundationServer.WorkItemTracking
     /// </summary>
     public static class WorkItemExtensions
     {
+        /// <summary>
+        /// Gets the related work item ids for the given <paramref name="workItem"/> and <paramref name="linkTypeReferenceNameIncludingDirection"/>.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction ('-forward' or '-reverse').</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItem</exception>
+        /// <exception cref="ArgumentException">
+        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
+        /// or
+        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
+        /// </exception>
+        public static IEnumerable<int> GetRelatedWorkItemIds(
+            this WorkItem workItem,
+            string linkTypeReferenceNameIncludingDirection)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+            
+                return workItem.GetRelatedWorkItemIdsAndRelationPositions(linkTypeReferenceNameIncludingDirection)
+                    .Select(relatedWorkItemIdsAndRelationPosition => relatedWorkItemIdsAndRelationPosition.RelatedWorkItemId)
+                    .Distinct();
+        }
+
+        /// <summary>
+        /// Gets the related work item ids and their <see cref="WorkItem.Relations"/> positions which is required for potential link/relation modification.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction ('-forward' or '-reverse').</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItem</exception>
+        /// <exception cref="ArgumentException">
+        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
+        /// or
+        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
+        /// </exception>
+        public static IEnumerable<(int RelationIndexPosition, int RelatedWorkItemId)> GetRelatedWorkItemIdsAndRelationPositions(
+            this WorkItem workItem,
+            string linkTypeReferenceNameIncludingDirection)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+
+            if (string.IsNullOrWhiteSpace(linkTypeReferenceNameIncludingDirection))
+                throw new ArgumentException($"Value for '{nameof(linkTypeReferenceNameIncludingDirection)}' cannot be null or whitespace.", nameof(linkTypeReferenceNameIncludingDirection));
+
+            if (linkTypeReferenceNameIncludingDirection.IndexOf(Constants.WorkItems.RelationsForwardSuffix,
+                    StringComparison.OrdinalIgnoreCase) < 0
+                && linkTypeReferenceNameIncludingDirection.IndexOf(Constants.WorkItems.RelationsReverseSuffix,
+                    StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                throw new ArgumentException($"Value for '{nameof(linkTypeReferenceNameIncludingDirection)}' must contain either a '{Constants.WorkItems.RelationsForwardSuffix}' or '{Constants.WorkItems.RelationsReverseSuffix}' suffix.", nameof(linkTypeReferenceNameIncludingDirection));
+            }
+
+            if (workItem.Relations == null || workItem.Relations.Count == 0)
+                return Enumerable.Empty<(int, int)>();
+
+            return workItem
+                .Relations
+                .Where(relation => string.Equals(relation.Rel, linkTypeReferenceNameIncludingDirection,
+                                       StringComparison.OrdinalIgnoreCase)
+                                   && !string.IsNullOrWhiteSpace(relation.Url) &&
+                                   Uri.IsWellFormedUriString(relation.Url, UriKind.Absolute))
+                .Select(relation => new
+                {
+                    RelationIndexPosition = workItem.Relations.IndexOf(relation),
+                    RelatedWorkItemId = TryParseWorkItemIdFromUri(new Uri(relation.Url, UriKind.Absolute), out var workItemId)
+                        ? workItemId
+                        : (int?) null
+                })
+                .Where(potentialWorkItemdId => potentialWorkItemdId.RelatedWorkItemId.HasValue)
+                .Select(potentialWorkItemdId => (potentialWorkItemdId.RelationIndexPosition, potentialWorkItemdId.RelatedWorkItemId.Value));
+        }
+
+        /// <summary>
+        /// Tries to parse the <paramref name="workItemUri"/> for the reference work item identifier.
+        /// </summary>
+        /// <param name="workItemUri">The work item URI.</param>
+        /// <param name="workItemId">The work item identifier.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItemUri</exception>
+        private static bool TryParseWorkItemIdFromUri(Uri workItemUri, out int? workItemId)
+        {
+            if (workItemUri == null) throw new ArgumentNullException(nameof(workItemUri));
+
+            if (string.IsNullOrWhiteSpace(workItemUri.LocalPath)
+                || !(workItemUri
+                    .LocalPath
+                    .Split("/".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
+                    .Where(segment => !string.IsNullOrWhiteSpace(segment))
+                    .Select(segment => segment.Trim().ToLower())
+                    .Where(segment => segment != "/")
+                    .ToList() is List<string> uriPathSegments)
+                || uriPathSegments.Count < 3)
+            {
+                workItemId = null;
+                return false;
+            }
+
+            // else
+            var lastPathSegmentValue = uriPathSegments.LastOrDefault();
+            var indexOfLastPathSegmentValue = uriPathSegments.IndexOf(lastPathSegmentValue);
+            if(indexOfLastPathSegmentValue < 2)
+            {
+                workItemId = null;
+                return false;
+            }
+
+            if (!string.Equals(uriPathSegments[indexOfLastPathSegmentValue - 1], "workitems",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                workItemId = null;
+                return false;
+            }
+
+            if (!string.Equals(uriPathSegments[indexOfLastPathSegmentValue - 2], "wit",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                workItemId = null;
+                return false;
+            }
+
+            if (!int.TryParse(lastPathSegmentValue, out var potentialWorkItemId))
+            {
+                workItemId = null;
+                return false;
+            }
+
+            // else
+            workItemId = potentialWorkItemId;
+            return true;
+        }
+
+        /// <summary>
+        /// Tries to get a specific link <see cref="Uri"/> of the <see cref="WorkItem.Links"/> collection
+        /// for the given <paramref name="linkName"/>.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <param name="linkName">Name of the link.</param>
+        /// <param name="linkUri">The link URI.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItem</exception>
+        /// <exception cref="ArgumentException">Value cannot be null or whitespace. - linkName</exception>
+        public static bool TryGetLinkValue(this WorkItem workItem, string linkName, out Uri linkUri)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+            if (string.IsNullOrWhiteSpace(linkName))
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(linkName));
+
+            if (workItem.Links?.Links == null
+                || workItem.Links.Links.TryGetValue(linkName, out var dictionaryValue) == false
+                || !(dictionaryValue is ReferenceLink referenceLink)
+                || string.IsNullOrWhiteSpace(referenceLink.Href)
+                || Uri.TryCreate(referenceLink.Href, UriKind.Absolute, out var referenceLinkUri) == false)
+            {
+                linkUri = null;
+                return false;
+            }
+
+            // else
+            linkUri = referenceLinkUri;
+            return true;
+        }
+
         /// <summary>
         /// Tries to get the field value for the provided <paramref name="workItem"/> and <paramref name="fieldReferenceName"/>.
         /// </summary>

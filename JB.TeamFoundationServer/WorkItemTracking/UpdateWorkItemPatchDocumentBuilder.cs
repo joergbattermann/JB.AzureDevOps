@@ -65,26 +65,20 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// </summary>
         /// <param name="attachmentRelationId">The attachment relation identifier.</param>
         public virtual UpdateWorkItemPatchDocumentBuilder RemoveAttachmentRelation(int attachmentRelationId)
-        {
-            return RemoveRelation(attachmentRelationId);
-        }
+            => RemoveRelation(attachmentRelationId);
 
         /// <summary>
         /// Removes the hyperlink relation for the given <paramref name="hyperlinkRelationId"/>.
         /// </summary>
         /// <param name="hyperlinkRelationId">The hyperlink relation identifier.</param>
         public virtual UpdateWorkItemPatchDocumentBuilder RemoveHyperlinkRelation(int hyperlinkRelationId)
-        {
-            return RemoveRelation(hyperlinkRelationId);
-        }
+            => RemoveRelation(hyperlinkRelationId);
 
         /// <summary>
         /// Removes the artifact link relation for the given <paramref name="artifactLinkRelationId"/>.
         /// </summary>
         /// <param name="artifactLinkRelationId">The artifact link relation identifier.</param>
         public virtual UpdateWorkItemPatchDocumentBuilder RemoveArtifactLinkRelation(int artifactLinkRelationId)
-        {
-            return RemoveRelation(artifactLinkRelationId);
-        }
+            => RemoveRelation(artifactLinkRelationId);
     }
 }
