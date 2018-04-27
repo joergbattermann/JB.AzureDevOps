@@ -55,6 +55,29 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
+        /// Determines whether the provided <paramref name="workItem" /> has the given <paramref name="workItemState" /> and optionally the <paramref name="workItemReason"/>.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <param name="workItemState">State of the work item.</param>
+        /// <param name="workItemReason">The work item reason.</param>
+        /// <returns>
+        ///   <c>true</c> if [is work item of type] [the specified work item type name]; otherwise, <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">workItem</exception>
+        /// <exception cref="ArgumentException">workItemState - workItem</exception>
+        public static bool HasWorkItemState(this WorkItem workItem, string workItemState, string workItemReason = "")
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+            if (string.IsNullOrWhiteSpace(workItemState)) throw new ArgumentException($"Parameter value '{nameof(workItemState)}' may not be null, empty or whitespaces only.", nameof(workItem));
+
+            return workItem.TryGetFieldValue(WellKnownWorkItemFieldReferenceNames.System.State, out string actualWorkItemState)
+                   && string.Equals(actualWorkItemState, workItemState, StringComparison.OrdinalIgnoreCase)
+                && (string.IsNullOrWhiteSpace(workItemReason)
+                    || workItem.TryGetFieldValue(WellKnownWorkItemFieldReferenceNames.System.Reason, out string actualWorkItemReason)
+                    && string.Equals(actualWorkItemReason, workItemReason, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
         /// Gets the related work item ids and their <see cref="WorkItem.Relations"/> positions which is required for potential link/relation modification.
         /// </summary>
         /// <param name="workItem">The work item.</param>
