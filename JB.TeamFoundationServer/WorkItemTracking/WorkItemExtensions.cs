@@ -35,6 +35,26 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
+        /// Determines whether the provided <paramref name="workItem"/> is a work item of the given <paramref name="workItemTypeName"/>.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <param name="workItemTypeName">Name of the work item type.</param>
+        /// <returns>
+        ///   <c>true</c> if [is work item of type] [the specified work item type name]; otherwise, <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">workItem</exception>
+        /// <exception cref="ArgumentException">workItemTypeName - workItem</exception>
+        public static bool IsWorkItemOfType(this WorkItem workItem, string workItemTypeName)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+            if (string.IsNullOrWhiteSpace(workItemTypeName)) throw new ArgumentException($"Parameter value '{nameof(workItemTypeName)}' may not be null, empty or whitespaces only.", nameof(workItem));
+
+            return workItem.TryGetFieldValue(WellKnownWorkItemFieldReferenceNames.System.WorkItemType,
+                       out string actualWorkItemTypeName)
+                   && string.Equals(actualWorkItemTypeName, workItemTypeName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
         /// Gets the related work item ids and their <see cref="WorkItem.Relations"/> positions which is required for potential link/relation modification.
         /// </summary>
         /// <param name="workItem">The work item.</param>
