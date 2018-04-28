@@ -78,6 +78,25 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
+        /// Determines whether the <paramref name="workItem"/> has a relation for the <paramref name="linkTypeReferenceNameIncludingDirection"/> from or to the given <paramref name="sourceOrTargetWorkItemId"/>.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <param name="sourceOrTargetWorkItemId">The source or target work item identifier.</param>
+        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction ('-forward' or '-reverse').</param>
+        /// <returns>
+        ///   <c>true</c> if there is such a relation; otherwise, <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">workItem</exception>
+        public static bool HasRelationFromOrToWorkItem(this WorkItem workItem, int sourceOrTargetWorkItemId,
+            string linkTypeReferenceNameIncludingDirection)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+
+            return workItem.GetRelatedWorkItemIds(linkTypeReferenceNameIncludingDirection)
+                .Any(linkedWorkItemId => linkedWorkItemId == sourceOrTargetWorkItemId);
+        }
+
+        /// <summary>
         /// Gets the related work item ids and their <see cref="WorkItem.Relations"/> positions which is required for potential link/relation modification.
         /// </summary>
         /// <param name="workItem">The work item.</param>
