@@ -87,13 +87,33 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         ///   <c>true</c> if there is such a relation; otherwise, <c>false</c>.
         /// </returns>
         /// <exception cref="ArgumentNullException">workItem</exception>
-        public static bool HasRelationFromOrToWorkItem(this WorkItem workItem, int sourceOrTargetWorkItemId,
+        public static bool HasRelationFromOrToWorkItemId(this WorkItem workItem, int sourceOrTargetWorkItemId,
             string linkTypeReferenceNameIncludingDirection)
         {
             if (workItem == null) throw new ArgumentNullException(nameof(workItem));
 
             return workItem.GetRelatedWorkItemIds(linkTypeReferenceNameIncludingDirection)
                 .Any(linkedWorkItemId => linkedWorkItemId == sourceOrTargetWorkItemId);
+        }
+
+        /// <summary>
+        /// Determines whether the <paramref name="workItem"/> has a relation for the <paramref name="linkTypeReferenceNameIncludingDirection"/> from or to the given <paramref name="sourceOrTargetWorkItem"/>.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <param name="sourceOrTargetWorkItem">The source or target work item.</param>
+        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction ('-forward' or '-reverse').</param>
+        /// <returns>
+        ///   <c>true</c> if there is such a relation; otherwise, <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">workItem</exception>
+        public static bool HasRelationFromOrToWorkItem(this WorkItem workItem, WorkItem sourceOrTargetWorkItem,
+            string linkTypeReferenceNameIncludingDirection)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+            if (sourceOrTargetWorkItem == null) throw new ArgumentNullException(nameof(sourceOrTargetWorkItem));
+
+            return workItem.GetRelatedWorkItemIds(linkTypeReferenceNameIncludingDirection)
+                .Any(linkedWorkItemId => linkedWorkItemId == sourceOrTargetWorkItem.Id);
         }
 
         /// <summary>
