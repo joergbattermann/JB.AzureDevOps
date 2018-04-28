@@ -668,9 +668,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// </summary>
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
         /// <param name="workItem">The work item.</param>
-        /// <param name="projectId">Project ID</param>
         /// <param name="workItemRelationTypeReferenceName">Name of the work item relation type reference. i.e. 'System.LinkTypes.Hierarchy-Forward'.</param>
-        /// <param name="count">The max number of results to return.</param>
         /// <param name="fields">The work item fields to retrieve.</param>
         /// <param name="asOf">The 'As of time' of the work item to retrieve.</param>
         /// <param name="expand">The <see cref="WorkItemExpand" /> to apply to the underlying client.</param>
@@ -684,9 +682,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         public static IObservable<WorkItem> GetRelatedWorkItems(
             this WorkItemTrackingHttpClient workItemTrackingHttpClient,
             WorkItem workItem,
-            Guid projectId,
             string workItemRelationTypeReferenceName,
-            int? count = null,
             IEnumerable<string> fields = null,
             DateTime? asOf = null,
             WorkItemExpand? expand = null,
