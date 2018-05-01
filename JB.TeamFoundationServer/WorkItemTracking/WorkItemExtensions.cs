@@ -28,10 +28,31 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             string linkTypeReferenceNameIncludingDirection)
         {
             if (workItem == null) throw new ArgumentNullException(nameof(workItem));
-            
-                return workItem.GetRelatedWorkItemIdsAndRelationPositions(linkTypeReferenceNameIncludingDirection)
-                    .Select(relatedWorkItemIdsAndRelationPosition => relatedWorkItemIdsAndRelationPosition.RelatedWorkItemId)
-                    .Distinct();
+
+            return workItem.GetRelatedWorkItemIdsAndRelationPositions(linkTypeReferenceNameIncludingDirection)
+                .Select(relatedWorkItemIdsAndRelationPosition => relatedWorkItemIdsAndRelationPosition.RelatedWorkItemId)
+                .Distinct();
+        }
+
+        /// <summary>
+        /// Gets the related work item ids for the given <paramref name="workItems"/> and <paramref name="linkTypeReferenceNameIncludingDirection"/>.
+        /// </summary>
+        /// <param name="workItems">The work items.</param>
+        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction ('-forward' or '-reverse').</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItem</exception>
+        /// <exception cref="ArgumentException">
+        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
+        /// or
+        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
+        /// </exception>
+        public static IEnumerable<(WorkItem WorkItem, int RelatedWorkItemId)> GetRelatedWorkItemIds(
+            this IEnumerable<WorkItem> workItems,
+            string linkTypeReferenceNameIncludingDirection)
+        {
+            return (workItems ?? Enumerable.Empty<WorkItem>())
+                .GetRelatedWorkItemIdsAndRelationPositions(linkTypeReferenceNameIncludingDirection)
+                .Select(relatedWorkItemIdsAndRelationPosition => (WorkItem: relatedWorkItemIdsAndRelationPosition.WorkItem, RelatedWorkItemId: relatedWorkItemIdsAndRelationPosition.RelatedWorkItemId));
         }
 
         /// <summary>
@@ -128,7 +149,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// or
         /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
         /// </exception>
-        public static IEnumerable<(int RelationIndexPosition, int RelatedWorkItemId)> GetRelatedWorkItemIdsAndRelationPositions(
+        public static IEnumerable<(int RelatedWorkItemId, int RelationIndexPosition)> GetRelatedWorkItemIdsAndRelationPositions(
             this WorkItem workItem,
             string linkTypeReferenceNameIncludingDirection)
         {
@@ -156,13 +177,45 @@ namespace JB.TeamFoundationServer.WorkItemTracking
                                    Uri.IsWellFormedUriString(relation.Url, UriKind.Absolute))
                 .Select(relation => new
                 {
-                    RelationIndexPosition = workItem.Relations.IndexOf(relation),
                     RelatedWorkItemId = TryParseWorkItemIdFromUri(new Uri(relation.Url, UriKind.Absolute), out var workItemId)
                         ? workItemId
-                        : (int?) null
+                        : (int?) null,
+                    RelationIndexPosition = workItem.Relations.IndexOf(relation)
                 })
                 .Where(potentialWorkItemdId => potentialWorkItemdId.RelatedWorkItemId.HasValue)
-                .Select(potentialWorkItemdId => (potentialWorkItemdId.RelationIndexPosition, potentialWorkItemdId.RelatedWorkItemId.Value));
+                .Select(potentialWorkItemdId => (RelatedWorkItemId: potentialWorkItemdId.RelatedWorkItemId.Value, RelationIndexPosition: potentialWorkItemdId.RelationIndexPosition));
+        }
+
+        /// <summary>
+        /// Gets the related work item ids and their <see cref="WorkItem.Relations"/> positions correlated to the provided <paramref name="workItems"/>.
+        /// </summary>
+        /// <param name="workItems">The work items.</param>
+        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction ('-forward' or '-reverse').</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">workItem</exception>
+        /// <exception cref="ArgumentException">
+        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
+        /// or
+        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
+        /// </exception>
+        public static IEnumerable<(WorkItem WorkItem, int RelatedWorkItemId, int RelationIndexPosition)> GetRelatedWorkItemIdsAndRelationPositions(
+            this IEnumerable<WorkItem> workItems,
+            string linkTypeReferenceNameIncludingDirection)
+        {
+            if (workItems == null)
+            {
+                workItems = Enumerable.Empty<WorkItem>();
+            }
+
+            foreach (var workItemAndRelatedWorkItems in workItems.Select(workItem => new { WorkItem = workItem, RelatedWorkItemIdsAndRelationPositions = workItem.GetRelatedWorkItemIdsAndRelationPositions(linkTypeReferenceNameIncludingDirection) }))
+            {
+                foreach (var workItemRelatedWorkItemIdsAndRelationPositions in workItemAndRelatedWorkItems.RelatedWorkItemIdsAndRelationPositions ?? Enumerable.Empty<(int RelationIndexPosition, int RelatedWorkItemId)>())
+                {
+                    yield return (WorkItem: workItemAndRelatedWorkItems.WorkItem,
+                        RelatedWorkItemId: workItemRelatedWorkItemIdsAndRelationPositions.RelatedWorkItemId,
+                        RelationIndexPosition: workItemRelatedWorkItemIdsAndRelationPositions.RelationIndexPosition);
+                }
+            }
         }
 
         /// <summary>
