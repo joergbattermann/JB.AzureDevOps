@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using Microsoft.TeamFoundation.Core.WebApi.Types;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
@@ -489,7 +490,14 @@ namespace JB.TeamFoundationServer.WorkItemTracking
 
             // else
             return Observable.FromAsync(
-                    token => workItemTrackingHttpClient.GetWorkItemsAsync(ids, fields, asOf, expand, errorPolicy, userState, token))
+                    token =>
+                    {
+                        var actualWorkItemIds = ids
+                            .Distinct()
+                            .ToList();
+
+                        return actualWorkItemIds.Count == 0 ? Task.FromResult(new List<WorkItem>()) : workItemTrackingHttpClient.GetWorkItemsAsync(actualWorkItemIds, fields, asOf, expand, errorPolicy, userState, token);
+                    })
                 .SelectMany(workItems => workItems)
                 .OfType<WorkItem>(); // if errorPolicy is set to WorkItemErrorPolicy.Omit, all non-found ids / their workitems are returned by the VSTS .net Api as null (as of writing)
         }
