@@ -233,7 +233,20 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
             
-            return Observable.FromAsync(token => workItemTrackingHttpClient.ExecuteBatchRequest(requests, userState, token))
+            return Observable.FromAsync(token =>
+                {
+                    var actualRequests = (requests ?? Enumerable.Empty<WitBatchRequest>())
+                        .ToList();
+
+                    if (actualRequests.Count == 0)
+                    {
+                        return !token.IsCancellationRequested
+                            ? Task.FromResult(new List<WitBatchResponse>())
+                            : Task.FromCanceled<List<WitBatchResponse>>(token);
+                    }
+
+                    return workItemTrackingHttpClient.ExecuteBatchRequest(requests, userState, token);
+                })
                 .SelectMany(witBatchResponses => witBatchResponses);
         }
 
@@ -275,9 +288,25 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         public static IObservable<(string ArtifactUri, IEnumerable<WorkItemReference> WorkItemReferences)> GetWorkItemReferencesForArtifactUris(this WorkItemTrackingHttpClient workItemTrackingHttpClient, IEnumerable<string> artifactUris, object userState = null)
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
-            if (artifactUris == null) throw new ArgumentNullException(nameof(artifactUris));
 
-            return workItemTrackingHttpClient.GetWorkItemReferencesForArtifactUris(new ArtifactUriQuery { ArtifactUris = artifactUris}, userState);
+            return Observable.Create<(string ArtifactUri, IEnumerable<WorkItemReference> WorkItemReferences)>(
+                observer =>
+                {
+                    var actualRequests = (artifactUris ?? Enumerable.Empty<string>())
+                        .Where(uri => !string.IsNullOrWhiteSpace(uri))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+
+                    if (actualRequests.Count == 0)
+                    {
+                        return Observable
+                            .Empty<(string ArtifactUri, IEnumerable<WorkItemReference> WorkItemReferences)>()
+                            .Subscribe(observer);
+                    }
+
+                    return workItemTrackingHttpClient.GetWorkItemReferencesForArtifactUris(new ArtifactUriQuery { ArtifactUris = artifactUris }, userState)
+                        .Subscribe(observer);
+                });
         }
         
         /// <summary>
@@ -714,12 +743,19 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
-        /// Gets the related work items for the provided <paramref name="workItems"/> and <paramref name="linkTypeReferenceNameIncludingDirection"/>.
+        /// Gets the related work items for the provided <paramref name="workItems" /> and <paramref name="linkTypeReferenceNameIncludingDirection" />.
         /// </summary>
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
         /// <param name="workItems">The work items.</param>
         /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction.</param>
-        /// <returns>An observable stream of tuples consisting of the original work Item and corresponding related work item.</returns>
+        /// <param name="fields">The fields.</param>
+        /// <param name="asOf">As of.</param>
+        /// <param name="expand">The expand.</param>
+        /// <param name="errorPolicy">The error policy.</param>
+        /// <param name="userState">State of the user.</param>
+        /// <returns>
+        /// An observable stream of tuples consisting of the original work Item and corresponding related work item.
+        /// </returns>
         public static IObservable<(WorkItem WorkItem, WorkItem RelatedWorkItem)> GetRelatedWorkItems(
             this WorkItemTrackingHttpClient workItemTrackingHttpClient,
             IEnumerable<WorkItem> workItems,
