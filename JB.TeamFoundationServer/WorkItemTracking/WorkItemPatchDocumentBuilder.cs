@@ -22,31 +22,23 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             // for creation see https://github.com/Microsoft/vsts-dotnet-samples/blob/master/ClientLibrary/Snippets/Microsoft.TeamServices.Samples.Client/WorkItemTracking/WorkItemsSample.cs#L198
             // for update see https://github.com/Microsoft/vsts-dotnet-samples/blob/master/ClientLibrary/Snippets/Microsoft.TeamServices.Samples.Client/WorkItemTracking/WorkItemsSample.cs#L316
         }
-        
+
         /// <summary>
-        /// Adds a relation of the given <paramref name="linkTypeReferenceNameIncludingDirection" /> type pointing to the provided <paramref name="targetWorkItemUrl" />
+        /// Adds a relation of the given <paramref name="linkTypeReferenceName" /> type pointing to the provided <paramref name="targetWorkItemUrl" />
         /// to this <see cref="WorkItemPatchDocumentBuilder" /> and ultimately the resulting <see cref="JsonPatchOperation"/>.
         /// </summary>
         /// <param name="targetWorkItemUrl">The target work item URL.</param>
-        /// <param name="linkTypeReferenceNameIncludingDirection">Reference Name of the work item link type.</param>
+        /// <param name="linkTypeReferenceName">The link type reference name (including direction '-forward' or '-reverse', if applicable).</param>
         /// <param name="comment">The (optional) relation/link comment.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException">fieldReferenceName - fieldReferenceName</exception>
-        public virtual WorkItemPatchDocumentBuilder AddRelation(string targetWorkItemUrl, string linkTypeReferenceNameIncludingDirection, string comment = "")
+        public virtual WorkItemPatchDocumentBuilder AddRelation(string targetWorkItemUrl, string linkTypeReferenceName, string comment = "")
         {
             if (string.IsNullOrWhiteSpace(targetWorkItemUrl))
                 throw new ArgumentException($"Value for '{nameof(targetWorkItemUrl)}' cannot be null or whitespace.", nameof(targetWorkItemUrl));
 
-            if (string.IsNullOrWhiteSpace(linkTypeReferenceNameIncludingDirection))
-                throw new ArgumentException($"Value for '{nameof(linkTypeReferenceNameIncludingDirection)}' cannot be null or whitespace.", nameof(linkTypeReferenceNameIncludingDirection));
-
-            if (linkTypeReferenceNameIncludingDirection.IndexOf(Constants.WorkItems.RelationsForwardSuffix,
-                    StringComparison.OrdinalIgnoreCase) < 0
-                && linkTypeReferenceNameIncludingDirection.IndexOf(Constants.WorkItems.RelationsReverseSuffix,
-                    StringComparison.OrdinalIgnoreCase) < 0)
-            {
-                throw new ArgumentException($"Value for '{nameof(linkTypeReferenceNameIncludingDirection)}' must contain either a '{Constants.WorkItems.RelationsForwardSuffix}' or '{Constants.WorkItems.RelationsReverseSuffix}' suffix.", nameof(linkTypeReferenceNameIncludingDirection));
-            }
+            if (string.IsNullOrWhiteSpace(linkTypeReferenceName))
+                throw new ArgumentException($"Value for '{nameof(linkTypeReferenceName)}' cannot be null or whitespace.", nameof(linkTypeReferenceName));
 
             PatchDocument.Add(
                 new JsonPatchOperation()
@@ -55,7 +47,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
                     Path = $"{Constants.WorkItems.RelationsBasePath}/-",
                     Value = new
                     {
-                        rel = $"{linkTypeReferenceNameIncludingDirection}",
+                        rel = $"{linkTypeReferenceName}",
                         url = targetWorkItemUrl,
                         attributes = new
                         {
@@ -71,20 +63,20 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
-        /// Adds a relation of the given <paramref name="linkTypeReferenceNameIncludingDirection" /> type pointing to the provided <paramref name="targetWorkItem" />
+        /// Adds a relation of the given <paramref name="linkTypeReferenceName" /> type pointing to the provided <paramref name="targetWorkItem" />
         /// to this <see cref="WorkItemPatchDocumentBuilder" /> and ultimately the resulting <see cref="JsonPatchOperation"/>.
         /// </summary>
         /// <param name="targetWorkItem">The target work item.</param>
-        /// <param name="linkTypeReferenceNameIncludingDirection">Reference Name of the work item link type.</param>
+        /// <param name="linkTypeReferenceName">The link type reference name (including direction '-forward' or '-reverse', if applicable).</param>
         /// <param name="comment">The (optional) relation/link comment.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException">fieldReferenceName - fieldReferenceName</exception>
-        public virtual WorkItemPatchDocumentBuilder AddRelation(WorkItem targetWorkItem, string linkTypeReferenceNameIncludingDirection, string comment = "")
+        public virtual WorkItemPatchDocumentBuilder AddRelation(WorkItem targetWorkItem, string linkTypeReferenceName, string comment = "")
         {
             if (targetWorkItem == null) throw new ArgumentNullException(nameof(targetWorkItem));
             if (string.IsNullOrWhiteSpace(targetWorkItem.Url)) throw new ArgumentException($"The '{nameof(targetWorkItem)}' must have a valid '{nameof(WorkItem.Url)}' value", nameof(targetWorkItem));
 
-            return AddRelation(targetWorkItem.Url, linkTypeReferenceNameIncludingDirection, comment);
+            return AddRelation(targetWorkItem.Url, linkTypeReferenceName, comment);
         }
 
         /// <summary>

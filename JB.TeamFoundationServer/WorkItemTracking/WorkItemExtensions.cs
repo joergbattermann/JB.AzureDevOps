@@ -12,46 +12,38 @@ namespace JB.TeamFoundationServer.WorkItemTracking
     public static class WorkItemExtensions
     {
         /// <summary>
-        /// Gets the related work item ids for the given <paramref name="workItem"/> and <paramref name="linkTypeReferenceNameIncludingDirection"/>.
+        /// Gets the related work item ids for the given <paramref name="workItem"/> and <paramref name="linkTypeReferenceName"/>.
         /// </summary>
         /// <param name="workItem">The work item.</param>
-        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction ('-forward' or '-reverse').</param>
+        /// <param name="linkTypeReferenceName">The link type reference name (including direction '-forward' or '-reverse', if applicable).</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">workItem</exception>
-        /// <exception cref="ArgumentException">
-        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
-        /// or
-        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
-        /// </exception>
+        /// <exception cref="ArgumentException">linkTypeReferenceName</exception>
         public static IEnumerable<int> GetRelatedWorkItemIds(
             this WorkItem workItem,
-            string linkTypeReferenceNameIncludingDirection)
+            string linkTypeReferenceName)
         {
             if (workItem == null) throw new ArgumentNullException(nameof(workItem));
 
-            return workItem.GetRelatedWorkItemIdsAndRelationPositions(linkTypeReferenceNameIncludingDirection)
+            return workItem.GetRelatedWorkItemIdsAndRelationPositions(linkTypeReferenceName)
                 .Select(relatedWorkItemIdsAndRelationPosition => relatedWorkItemIdsAndRelationPosition.RelatedWorkItemId)
                 .Distinct();
         }
 
         /// <summary>
-        /// Gets the related work item ids for the given <paramref name="workItems"/> and <paramref name="linkTypeReferenceNameIncludingDirection"/>.
+        /// Gets the related work item ids for the given <paramref name="workItems"/> and <paramref name="linkTypeReferenceName"/>.
         /// </summary>
         /// <param name="workItems">The work items.</param>
-        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction ('-forward' or '-reverse').</param>
+        /// <param name="linkTypeReferenceName">The link type reference name (including direction '-forward' or '-reverse', if applicable).</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">workItem</exception>
-        /// <exception cref="ArgumentException">
-        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
-        /// or
-        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
-        /// </exception>
+        /// <exception cref="ArgumentException">linkTypeReferenceName</exception>
         public static IEnumerable<(WorkItem WorkItem, int RelatedWorkItemId)> GetRelatedWorkItemIds(
             this IEnumerable<WorkItem> workItems,
-            string linkTypeReferenceNameIncludingDirection)
+            string linkTypeReferenceName)
         {
             return (workItems ?? Enumerable.Empty<WorkItem>())
-                .GetRelatedWorkItemIdsAndRelationPositions(linkTypeReferenceNameIncludingDirection)
+                .GetRelatedWorkItemIdsAndRelationPositions(linkTypeReferenceName)
                 .Select(relatedWorkItemIdsAndRelationPosition => (WorkItem: relatedWorkItemIdsAndRelationPosition.WorkItem, RelatedWorkItemId: relatedWorkItemIdsAndRelationPosition.RelatedWorkItemId));
         }
 
@@ -99,41 +91,42 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
-        /// Determines whether the <paramref name="workItem"/> has a relation for the <paramref name="linkTypeReferenceNameIncludingDirection"/> from or to the given <paramref name="sourceOrTargetWorkItemId"/>.
+        /// Determines whether the <paramref name="workItem"/> has a relation for the <paramref name="linkTypeReferenceName"/> from or to the given <paramref name="sourceOrTargetWorkItemId"/>.
         /// </summary>
         /// <param name="workItem">The work item.</param>
         /// <param name="sourceOrTargetWorkItemId">The source or target work item identifier.</param>
-        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction ('-forward' or '-reverse').</param>
+        /// <param name="linkTypeReferenceName">The link type reference name (including direction '-forward' or '-reverse', if applicable).</param>
         /// <returns>
         ///   <c>true</c> if there is such a relation; otherwise, <c>false</c>.
         /// </returns>
         /// <exception cref="ArgumentNullException">workItem</exception>
         public static bool HasRelationFromOrToWorkItemId(this WorkItem workItem, int sourceOrTargetWorkItemId,
-            string linkTypeReferenceNameIncludingDirection)
+            string linkTypeReferenceName)
         {
             if (workItem == null) throw new ArgumentNullException(nameof(workItem));
 
-            return workItem.GetRelatedWorkItemIds(linkTypeReferenceNameIncludingDirection)
+            return workItem.GetRelatedWorkItemIds(linkTypeReferenceName)
                 .Any(linkedWorkItemId => linkedWorkItemId == sourceOrTargetWorkItemId);
         }
 
         /// <summary>
-        /// Determines whether the <paramref name="workItem"/> has a relation for the <paramref name="linkTypeReferenceNameIncludingDirection"/> from or to the given <paramref name="sourceOrTargetWorkItem"/>.
+        /// Determines whether the <paramref name="workItem"/> has a relation for the <paramref name="linkTypeReferenceName"/> from or to the given <paramref name="sourceOrTargetWorkItem"/>.
         /// </summary>
         /// <param name="workItem">The work item.</param>
         /// <param name="sourceOrTargetWorkItem">The source or target work item.</param>
-        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction ('-forward' or '-reverse').</param>
+        /// <param name="linkTypeReferenceName">The link type reference name (including direction '-forward' or '-reverse', if applicable).</param>
         /// <returns>
         ///   <c>true</c> if there is such a relation; otherwise, <c>false</c>.
         /// </returns>
         /// <exception cref="ArgumentNullException">workItem</exception>
-        public static bool HasRelationFromOrToWorkItem(this WorkItem workItem, WorkItem sourceOrTargetWorkItem,
-            string linkTypeReferenceNameIncludingDirection)
+        public static bool HasRelationFromOrToWorkItem(this WorkItem workItem,
+            WorkItem sourceOrTargetWorkItem,
+            string linkTypeReferenceName)
         {
             if (workItem == null) throw new ArgumentNullException(nameof(workItem));
             if (sourceOrTargetWorkItem == null) throw new ArgumentNullException(nameof(sourceOrTargetWorkItem));
 
-            return workItem.GetRelatedWorkItemIds(linkTypeReferenceNameIncludingDirection)
+            return workItem.GetRelatedWorkItemIds(linkTypeReferenceName)
                 .Any(linkedWorkItemId => linkedWorkItemId == sourceOrTargetWorkItem.Id);
         }
 
@@ -141,37 +134,25 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// Gets the related work item ids and their <see cref="WorkItem.Relations"/> positions which is required for potential link/relation modification.
         /// </summary>
         /// <param name="workItem">The work item.</param>
-        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction ('-forward' or '-reverse').</param>
+        /// <param name="linkTypeReferenceName">The link type reference name (including direction '-forward' or '-reverse', if applicable).</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">workItem</exception>
-        /// <exception cref="ArgumentException">
-        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
-        /// or
-        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
-        /// </exception>
+        /// <exception cref="ArgumentException">linkTypeReferenceName</exception>
         public static IEnumerable<(int RelatedWorkItemId, int RelationIndexPosition)> GetRelatedWorkItemIdsAndRelationPositions(
             this WorkItem workItem,
-            string linkTypeReferenceNameIncludingDirection)
+            string linkTypeReferenceName)
         {
             if (workItem == null) throw new ArgumentNullException(nameof(workItem));
 
-            if (string.IsNullOrWhiteSpace(linkTypeReferenceNameIncludingDirection))
-                throw new ArgumentException($"Value for '{nameof(linkTypeReferenceNameIncludingDirection)}' cannot be null or whitespace.", nameof(linkTypeReferenceNameIncludingDirection));
-
-            if (linkTypeReferenceNameIncludingDirection.IndexOf(Constants.WorkItems.RelationsForwardSuffix,
-                    StringComparison.OrdinalIgnoreCase) < 0
-                && linkTypeReferenceNameIncludingDirection.IndexOf(Constants.WorkItems.RelationsReverseSuffix,
-                    StringComparison.OrdinalIgnoreCase) < 0)
-            {
-                throw new ArgumentException($"Value for '{nameof(linkTypeReferenceNameIncludingDirection)}' must contain either a '{Constants.WorkItems.RelationsForwardSuffix}' or '{Constants.WorkItems.RelationsReverseSuffix}' suffix.", nameof(linkTypeReferenceNameIncludingDirection));
-            }
+            if (string.IsNullOrWhiteSpace(linkTypeReferenceName))
+                throw new ArgumentException($"Value for '{nameof(linkTypeReferenceName)}' cannot be null or whitespace.", nameof(linkTypeReferenceName));
 
             if (workItem.Relations == null || workItem.Relations.Count == 0)
                 return Enumerable.Empty<(int, int)>();
 
             return workItem
                 .Relations
-                .Where(relation => string.Equals(relation.Rel, linkTypeReferenceNameIncludingDirection,
+                .Where(relation => string.Equals(relation.Rel, linkTypeReferenceName,
                                        StringComparison.OrdinalIgnoreCase)
                                    && !string.IsNullOrWhiteSpace(relation.Url) &&
                                    Uri.IsWellFormedUriString(relation.Url, UriKind.Absolute))
@@ -190,24 +171,20 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// Gets the related work item ids and their <see cref="WorkItem.Relations"/> positions correlated to the provided <paramref name="workItems"/>.
         /// </summary>
         /// <param name="workItems">The work items.</param>
-        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction ('-forward' or '-reverse').</param>
+        /// <param name="linkTypeReferenceName">The link type reference name (including direction '-forward' or '-reverse', if applicable).</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">workItem</exception>
-        /// <exception cref="ArgumentException">
-        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
-        /// or
-        /// linkTypeReferenceNameIncludingDirection - linkTypeReferenceNameIncludingDirection
-        /// </exception>
+        /// <exception cref="ArgumentException">linkTypeReferenceName</exception>
         public static IEnumerable<(WorkItem WorkItem, int RelatedWorkItemId, int RelationIndexPosition)> GetRelatedWorkItemIdsAndRelationPositions(
             this IEnumerable<WorkItem> workItems,
-            string linkTypeReferenceNameIncludingDirection)
+            string linkTypeReferenceName)
         {
             if (workItems == null)
             {
                 workItems = Enumerable.Empty<WorkItem>();
             }
 
-            foreach (var workItemAndRelatedWorkItems in workItems.Select(workItem => new { WorkItem = workItem, RelatedWorkItemIdsAndRelationPositions = workItem.GetRelatedWorkItemIdsAndRelationPositions(linkTypeReferenceNameIncludingDirection) }))
+            foreach (var workItemAndRelatedWorkItems in workItems.Select(workItem => new { WorkItem = workItem, RelatedWorkItemIdsAndRelationPositions = workItem.GetRelatedWorkItemIdsAndRelationPositions(linkTypeReferenceName) }))
             {
                 foreach (var workItemRelatedWorkItemIdsAndRelationPositions in workItemAndRelatedWorkItems.RelatedWorkItemIdsAndRelationPositions ?? Enumerable.Empty<(int RelationIndexPosition, int RelatedWorkItemId)>())
                 {

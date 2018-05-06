@@ -703,11 +703,11 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
-        /// Gets the related work items for the <paramref name="workItem" /> of the given <paramref name="linkTypeReferenceNameIncludingDirection" />.
+        /// Gets the related work items for the <paramref name="workItem" /> of the given <paramref name="linkTypeReferenceName" />.
         /// </summary>
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
         /// <param name="workItem">The work item.</param>
-        /// <param name="linkTypeReferenceNameIncludingDirection">Name of the work item relation type reference. i.e. 'System.LinkTypes.Hierarchy-Forward'.</param>
+        /// <param name="linkTypeReferenceName">The link type reference name (including direction '-forward' or '-reverse', if applicable).</param>
         /// <param name="fields">The work item fields to retrieve.</param>
         /// <param name="asOf">The 'As of time' of the work item to retrieve.</param>
         /// <param name="expand">The <see cref="WorkItemExpand" /> to apply to the underlying client.</param>
@@ -717,11 +717,11 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <exception cref="ArgumentNullException">workItemTrackingHttpClient
         /// or
         /// workItem</exception>
-        /// <exception cref="ArgumentOutOfRangeException">linkTypeReferenceNameIncludingDirection</exception>
+        /// <exception cref="ArgumentOutOfRangeException">linkTypeReferenceName</exception>
         public static IObservable<WorkItem> GetRelatedWorkItems(
             this WorkItemTrackingHttpClient workItemTrackingHttpClient,
             WorkItem workItem,
-            string linkTypeReferenceNameIncludingDirection,
+            string linkTypeReferenceName,
             IEnumerable<string> fields = null,
             DateTime? asOf = null,
             WorkItemExpand? expand = null,
@@ -730,10 +730,10 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
             if (workItem == null) throw new ArgumentNullException(nameof(workItem));
-            if (string.IsNullOrWhiteSpace(linkTypeReferenceNameIncludingDirection)) throw new ArgumentOutOfRangeException(nameof(linkTypeReferenceNameIncludingDirection));
+            if (string.IsNullOrWhiteSpace(linkTypeReferenceName)) throw new ArgumentOutOfRangeException(nameof(linkTypeReferenceName));
 
             return Observable.Create<WorkItem>(observer => workItemTrackingHttpClient.GetWorkItems(
-                    workItem.GetRelatedWorkItemIds(linkTypeReferenceNameIncludingDirection),
+                    workItem.GetRelatedWorkItemIds(linkTypeReferenceName),
                     fields,
                     asOf,
                     expand,
@@ -743,11 +743,11 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
-        /// Gets the related work items for the provided <paramref name="workItems" /> and <paramref name="linkTypeReferenceNameIncludingDirection" />.
+        /// Gets the related work items for the provided <paramref name="workItems" /> and <paramref name="linkTypeReferenceName" />.
         /// </summary>
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
         /// <param name="workItems">The work items.</param>
-        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction.</param>
+        /// <param name="linkTypeReferenceName">The link type reference name including direction.</param>
         /// <param name="fields">The fields.</param>
         /// <param name="asOf">As of.</param>
         /// <param name="expand">The expand.</param>
@@ -759,7 +759,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         public static IObservable<(WorkItem WorkItem, WorkItem RelatedWorkItem)> GetRelatedWorkItems(
             this WorkItemTrackingHttpClient workItemTrackingHttpClient,
             IEnumerable<WorkItem> workItems,
-            string linkTypeReferenceNameIncludingDirection,
+            string linkTypeReferenceName,
             IEnumerable<string> fields = null,
             DateTime? asOf = null,
             WorkItemExpand? expand = null,
@@ -768,12 +768,12 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
             if (workItems == null) throw new ArgumentNullException(nameof(workItems));
-            if (string.IsNullOrWhiteSpace(linkTypeReferenceNameIncludingDirection)) throw new ArgumentOutOfRangeException(nameof(linkTypeReferenceNameIncludingDirection));
+            if (string.IsNullOrWhiteSpace(linkTypeReferenceName)) throw new ArgumentOutOfRangeException(nameof(linkTypeReferenceName));
 
             return Observable.Create<(WorkItem WorkItem, WorkItem RelatedWorkItem)>(observer =>
             {
                 var relationsByWorkItems = workItems
-                    .GetRelatedWorkItemIds(linkTypeReferenceNameIncludingDirection)
+                    .GetRelatedWorkItemIds(linkTypeReferenceName)
                     .GroupBy(relationTuple => relationTuple.WorkItem, relationTuple => relationTuple.RelatedWorkItemId)
                     .ToDictionary(grouping => grouping.Key, grouping => grouping.ToHashSet());
 
@@ -797,44 +797,44 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
-        /// Gets the related work item ids for the provided <paramref name="workItems"/> and <paramref name="linkTypeReferenceNameIncludingDirection"/>.
+        /// Gets the related work item ids for the provided <paramref name="workItems"/> and <paramref name="linkTypeReferenceName"/>.
         /// </summary>
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
         /// <param name="workItems">The work items.</param>
-        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction.</param>
+        /// <param name="linkTypeReferenceName">The link type reference name (including direction '-forward' or '-reverse', if applicable).</param>
         /// <returns>An observable stream of tuples consisting of the original work Item and corresponding related work item id.</returns>
         public static IObservable<(WorkItem WorkItem, int RelatedWorkItemId)> GetRelatedWorkItemIds(
             this WorkItemTrackingHttpClient workItemTrackingHttpClient,
             IEnumerable<WorkItem> workItems,
-            string linkTypeReferenceNameIncludingDirection)
+            string linkTypeReferenceName)
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
             if (workItems == null) throw new ArgumentNullException(nameof(workItems));
-            if (string.IsNullOrWhiteSpace(linkTypeReferenceNameIncludingDirection)) throw new ArgumentOutOfRangeException(nameof(linkTypeReferenceNameIncludingDirection));
+            if (string.IsNullOrWhiteSpace(linkTypeReferenceName)) throw new ArgumentOutOfRangeException(nameof(linkTypeReferenceName));
 
             return Observable.Create<(WorkItem WorkItem, int RelatedWorkItemId)>(observer => workItems
-                .GetRelatedWorkItemIds(linkTypeReferenceNameIncludingDirection)
+                .GetRelatedWorkItemIds(linkTypeReferenceName)
                 .ToObservable()
                 .Subscribe(observer));
         }
 
         /// <summary>
-        /// Gets the related work item ids for the provided <paramref name="workItemIds"/> and <paramref name="linkTypeReferenceNameIncludingDirection"/>.
+        /// Gets the related work item ids for the provided <paramref name="workItemIds"/> and <paramref name="linkTypeReferenceName"/>.
         /// </summary>
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
         /// <param name="workItemIds">The work item ids.</param>
-        /// <param name="linkTypeReferenceNameIncludingDirection">The link type reference name including direction.</param>
+        /// <param name="linkTypeReferenceName">The link type reference name (including direction '-forward' or '-reverse', if applicable).</param>
         /// <returns>An observable stream of tuples consisting of the original work Item Id and corresponding related work item id.</returns>
         public static IObservable<(int WorkItemId, int RelatedWorkItemId)> GetRelatedWorkItemIds(
                     this WorkItemTrackingHttpClient workItemTrackingHttpClient,
                     IEnumerable<int> workItemIds,
-                    string linkTypeReferenceNameIncludingDirection)
+                    string linkTypeReferenceName)
         {
             return Observable
                 .FromAsync(token =>
                     workItemTrackingHttpClient.GetWorkItemsAsync(workItemIds, expand: WorkItemExpand.Relations, errorPolicy: WorkItemErrorPolicy.Omit, cancellationToken: token))
                 .SelectMany(workItems =>
-                    workItemTrackingHttpClient.GetRelatedWorkItemIds(workItems, linkTypeReferenceNameIncludingDirection))
+                    workItemTrackingHttpClient.GetRelatedWorkItemIds(workItems, linkTypeReferenceName))
                 .Where(relationTuple => relationTuple.WorkItem?.Id != null)
                 .Select(relationTuple => (relationTuple.WorkItem.Id.Value, relationTuple.RelatedWorkItemId));
         }
