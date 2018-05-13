@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JB.TeamFoundationServer.WorkItemTracking.WellKnownWorkItemFieldReferenceNames;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.WebApi;
 
@@ -62,9 +63,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             if (workItem == null) throw new ArgumentNullException(nameof(workItem));
             if (string.IsNullOrWhiteSpace(workItemTypeName)) throw new ArgumentException($"Parameter value '{nameof(workItemTypeName)}' may not be null, empty or whitespaces only.", nameof(workItem));
 
-            return workItem.TryGetFieldValue(WellKnownWorkItemFieldReferenceNames.System.WorkItemType,
-                       out string actualWorkItemTypeName)
-                   && string.Equals(actualWorkItemTypeName, workItemTypeName, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(workItem.GetWorkItemType(), workItemTypeName, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -83,11 +82,9 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             if (workItem == null) throw new ArgumentNullException(nameof(workItem));
             if (string.IsNullOrWhiteSpace(workItemState)) throw new ArgumentException($"Parameter value '{nameof(workItemState)}' may not be null, empty or whitespaces only.", nameof(workItem));
 
-            return workItem.TryGetFieldValue(WellKnownWorkItemFieldReferenceNames.System.State, out string actualWorkItemState)
-                   && string.Equals(actualWorkItemState, workItemState, StringComparison.OrdinalIgnoreCase)
+            return string.Equals(workItem.GetState(), workItemState, StringComparison.OrdinalIgnoreCase)
                 && (string.IsNullOrWhiteSpace(workItemReason)
-                    || workItem.TryGetFieldValue(WellKnownWorkItemFieldReferenceNames.System.Reason, out string actualWorkItemReason)
-                    && string.Equals(actualWorkItemReason, workItemReason, StringComparison.OrdinalIgnoreCase));
+                    || string.Equals(workItem.GetReason(), workItemReason, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
@@ -348,6 +345,158 @@ namespace JB.TeamFoundationServer.WorkItemTracking
                 value = default(TValue);
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Gets the area path for the provided <paramref name="workItem"/>
+        /// assuming the later was originally fetched including the <see cref="System.AreaPath"/> field.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <returns></returns>
+        public static string GetAreaPath(this WorkItem workItem)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+            
+            return workItem
+                .TryGetFieldValue<string>(
+                    WellKnownWorkItemFieldReferenceNames.System.AreaPath,
+                    string.Empty,
+                    out var areaPath)
+                ? areaPath
+                : string.Empty;
+        }
+
+        /// <summary>
+        /// Gets the iteration path for the provided <paramref name="workItem"/>
+        /// assuming the later was originally fetched including the <see cref="System.IterationPath"/> field.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <returns></returns>
+        public static string GetIterationPath(this WorkItem workItem)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+
+            return workItem
+                .TryGetFieldValue<string>(
+                    WellKnownWorkItemFieldReferenceNames.System.IterationPath,
+                    string.Empty,
+                    out var iterationPath)
+                ? iterationPath
+                : string.Empty;
+        }
+
+        /// <summary>
+        /// Gets the state for the provided <paramref name="workItem"/>
+        /// assuming the later was originally fetched including the <see cref="System.State"/> field.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <returns></returns>
+        public static string GetState(this WorkItem workItem)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+
+            return workItem
+                .TryGetFieldValue<string>(
+                    WellKnownWorkItemFieldReferenceNames.System.State,
+                    string.Empty,
+                    out var state)
+                ? state
+                : string.Empty;
+        }
+
+        /// <summary>
+        /// Gets the reason for the provided <paramref name="workItem"/>
+        /// assuming the later was originally fetched including the <see cref="System.Reason"/> field.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <returns></returns>
+        public static string GetReason(this WorkItem workItem)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+
+            return workItem
+                .TryGetFieldValue<string>(
+                    WellKnownWorkItemFieldReferenceNames.System.Reason,
+                    string.Empty,
+                    out var reason)
+                ? reason
+                : string.Empty;
+        }
+
+        /// <summary>
+        /// Gets the assigned to value for the provided <paramref name="workItem"/>
+        /// assuming the later was originally fetched including the <see cref="System.AssignedTo"/> field.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <returns></returns>
+        public static string GetAssignedTo(this WorkItem workItem)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+
+            return workItem
+                .TryGetFieldValue<string>(
+                    WellKnownWorkItemFieldReferenceNames.System.AssignedTo,
+                    string.Empty,
+                    out var assignedTo)
+                ? assignedTo
+                : string.Empty;
+        }
+
+        /// <summary>
+        /// Gets the work item type for the provided <paramref name="workItem"/>
+        /// assuming the later was originally fetched including the <see cref="System.WorkItemType"/> field.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <returns></returns>
+        public static string GetWorkItemType(this WorkItem workItem)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+
+            return workItem
+                .TryGetFieldValue<string>(
+                    WellKnownWorkItemFieldReferenceNames.System.WorkItemType,
+                    string.Empty,
+                    out var workItemType)
+                ? workItemType
+                : string.Empty;
+        }
+
+        /// <summary>
+        /// Gets the team project for the provided <paramref name="workItem"/>
+        /// assuming the later was originally fetched including the <see cref="System.TeamProject"/> field.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <returns></returns>
+        public static string GetTeamProject(this WorkItem workItem)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+
+            return workItem
+                .TryGetFieldValue<string>(
+                    WellKnownWorkItemFieldReferenceNames.System.TeamProject,
+                    string.Empty,
+                    out var teamProject)
+                ? teamProject
+                : string.Empty;
+        }
+
+        /// <summary>
+        /// Gets the title for the provided <paramref name="workItem"/>
+        /// assuming the later was originally fetched including the <see cref="System.Title"/> field.
+        /// </summary>
+        /// <param name="workItem">The work item.</param>
+        /// <returns></returns>
+        public static string GetTitle(this WorkItem workItem)
+        {
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+
+            return workItem
+                .TryGetFieldValue<string>(
+                    WellKnownWorkItemFieldReferenceNames.System.Title,
+                    string.Empty,
+                    out var title)
+                ? title
+                : string.Empty;
         }
 
         /// <summary>
