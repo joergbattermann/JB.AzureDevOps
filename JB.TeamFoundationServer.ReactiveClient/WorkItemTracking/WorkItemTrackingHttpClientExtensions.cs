@@ -504,7 +504,10 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="userState">The userState object.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
-        public static IObservable<WorkItem> GetWorkItems(this WorkItemTrackingHttpClient workItemTrackingHttpClient, IEnumerable<int> ids, IEnumerable<string> fields = null,
+        public static IObservable<WorkItem> GetWorkItems(
+            this WorkItemTrackingHttpClient workItemTrackingHttpClient,
+            IEnumerable<int> ids,
+            IEnumerable<string> fields = null,
             DateTime? asOf = null,
             WorkItemExpand? expand = null,
             WorkItemErrorPolicy? errorPolicy = null,
@@ -517,18 +520,27 @@ namespace JB.TeamFoundationServer.WorkItemTracking
                 return Observable.Empty<WorkItem>();
             }
 
-            // else
-            return Observable.FromAsync(
-                    token =>
+            return Observable.Create<WorkItem>(observer =>
+            {
+                return ids
+                    .Distinct()
+                    .ToObservable()
+                    .Buffer(Constants.WorkItems.WorkItemBatchSize)
+                    .SelectMany(batchOfWorkItemIds =>
                     {
-                        var actualWorkItemIds = ids
-                            .Distinct()
-                            .ToList();
-
-                        return actualWorkItemIds.Count == 0 ? Task.FromResult(new List<WorkItem>()) : workItemTrackingHttpClient.GetWorkItemsAsync(actualWorkItemIds, fields, asOf, expand, errorPolicy, userState, token);
+                        return Observable.FromAsync(
+                                token =>
+                                {
+                                    return batchOfWorkItemIds.Count == 0
+                                        ? Task.FromResult(new List<WorkItem>())
+                                        : workItemTrackingHttpClient.GetWorkItemsAsync(batchOfWorkItemIds, fields, asOf,
+                                            expand, errorPolicy, userState, token);
+                                })
+                            .SelectMany(workItems => workItems)
+                            .OfType<WorkItem>(); // if errorPolicy is set to WorkItemErrorPolicy.Omit, all non-found ids / their workitems are returned by the VSTS .net Api as null (as of writing)
                     })
-                .SelectMany(workItems => workItems)
-                .OfType<WorkItem>(); // if errorPolicy is set to WorkItemErrorPolicy.Omit, all non-found ids / their workitems are returned by the VSTS .net Api as null (as of writing)
+                    .Subscribe(observer);
+            });
         }
 
         /// <summary>
@@ -812,10 +824,11 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             if (workItems == null) throw new ArgumentNullException(nameof(workItems));
             if (string.IsNullOrWhiteSpace(linkTypeReferenceName)) throw new ArgumentOutOfRangeException(nameof(linkTypeReferenceName));
 
-            return Observable.Create<(WorkItem WorkItem, int RelatedWorkItemId)>(observer => workItems
-                .GetRelatedWorkItemIds(linkTypeReferenceName)
-                .ToObservable()
-                .Subscribe(observer));
+            return Observable.Create<(WorkItem WorkItem, int RelatedWorkItemId)>(
+                observer => workItems
+                    .GetRelatedWorkItemIds(linkTypeReferenceName)
+                    .ToObservable()
+                    .Subscribe(observer));
         }
 
         /// <summary>
@@ -830,13 +843,11 @@ namespace JB.TeamFoundationServer.WorkItemTracking
                     IEnumerable<int> workItemIds,
                     string linkTypeReferenceName)
         {
-            return Observable
-                .FromAsync(token =>
-                    workItemTrackingHttpClient.GetWorkItemsAsync(workItemIds, expand: WorkItemExpand.Relations, errorPolicy: WorkItemErrorPolicy.Omit, cancellationToken: token))
-                .SelectMany(workItems =>
-                    workItemTrackingHttpClient.GetRelatedWorkItemIds(workItems, linkTypeReferenceName))
-                .Where(relationTuple => relationTuple.WorkItem?.Id != null)
-                .Select(relationTuple => (relationTuple.WorkItem.Id.Value, relationTuple.RelatedWorkItemId));
+            return workItemTrackingHttpClient
+                .GetWorkItems(workItemIds, expand: WorkItemExpand.Relations, errorPolicy: WorkItemErrorPolicy.Omit)
+                .Select(workItem => (WorkItemId: workItem.Id, RelatedWorkItemIds: workItem.GetRelatedWorkItemIds(linkTypeReferenceName).ToList()))
+                .Where(valueTuple => valueTuple.WorkItemId.HasValue)
+                .SelectMany(valueTuple => valueTuple.RelatedWorkItemIds.Select(relatedWorkItemId => (WorkItemId: valueTuple.WorkItemId.Value, RelatedWorkItemId: relatedWorkItemId)));
         }
 
         /// <summary>

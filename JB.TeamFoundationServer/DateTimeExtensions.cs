@@ -11,6 +11,6 @@ namespace JB.TeamFoundationServer
         /// <param name="dateTime">The date time.</param>
         /// <returns></returns>
         public static string ToWiqlDateTimeString(this DateTime dateTime)
-            => dateTime.ToUniversalTime().ToString("o", CultureInfo.InvariantCulture);
+            => dateTime.ToUniversalTime().ToString(Microsoft.TeamFoundation.WorkItemTracking.WebApi.WitConstants.WorkItemTrackingWebConstants.InvariantUtcTimeFormat, CultureInfo.InvariantCulture);
     }
 }

@@ -19,5 +19,7 @@
         internal const string LinksLinkNameHtml = "html";
         internal const string LinksLinkNameWorkItemType = "workItemType";
         internal const string LinksLinkNameFields = "fields";
+
+        public const int WorkItemBatchSize = 200; // see https://github.com/MicrosoftDocs/vsts-docs/issues/1638
     }
 }
