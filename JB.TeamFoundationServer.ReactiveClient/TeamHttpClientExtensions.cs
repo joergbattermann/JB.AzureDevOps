@@ -19,19 +19,20 @@ namespace JB.TeamFoundationServer
         /// <param name="mine">If true return all the teams requesting user is member, otherwise return all the teams user has read access</param>
         /// <param name="count">The amount of teams to retrieve at most.</param>
         /// <param name="skip">How many teams to skip.</param>
+        /// <param name="expandIdentity">A value indicating whether or not to expand <see cref="T:Microsoft.VisualStudio.Services.Identity.Identity" /> information in the result <see cref="T:Microsoft.TeamFoundation.Core.WebApi.WebApiTeam" /> object.</param>
         /// <param name="userState">The user state object to pass along to the underlying method.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">teamHttpClient</exception>
         public static IObservable<WebApiTeam> GetTeams(
-            this TeamHttpClient teamHttpClient, string projectNameOrId = "", bool? mine = null, int? count = null, int? skip = null, object userState = null)
+            this TeamHttpClient teamHttpClient, string projectNameOrId = "", bool? mine = null, int? count = null, int? skip = null, bool? expandIdentity = null, object userState = null)
         {
             if (teamHttpClient == null)
                 throw new ArgumentNullException(nameof(teamHttpClient));
 
             return !string.IsNullOrWhiteSpace(projectNameOrId)
-                ? Observable.FromAsync(cancellationToken => teamHttpClient.GetTeamsAsync(projectNameOrId, mine, count, skip, userState, cancellationToken))
+                ? Observable.FromAsync(cancellationToken => teamHttpClient.GetTeamsAsync(projectNameOrId, mine, count, skip, expandIdentity, userState, cancellationToken))
                     .SelectMany(webApiTeams => webApiTeams)
-                : Observable.FromAsync(cancellationToken => teamHttpClient.GetAllTeamsAsync(mine, count, skip, userState, cancellationToken))
+                : Observable.FromAsync(cancellationToken => teamHttpClient.GetAllTeamsAsync(mine, count, skip, expandIdentity, userState, cancellationToken))
                     .SelectMany(webApiTeams => webApiTeams);
         }
 
@@ -41,18 +42,19 @@ namespace JB.TeamFoundationServer
         /// <param name="teamHttpClient">The team HTTP client.</param>
         /// <param name="projectNameOrId">The project name or identifier.</param>
         /// <param name="teamNameOrId">The team name or identifier.</param>
+        /// <param name="expandIdentity">A value indicating whether or not to expand <see cref="T:Microsoft.VisualStudio.Services.Identity.Identity" /> information in the result <see cref="T:Microsoft.TeamFoundation.Core.WebApi.WebApiTeam" /> object.</param>
         /// <param name="userState">The user state object to pass along to the underlying method.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">teamHttpClient</exception>
         public static IObservable<WebApiTeam> GetTeam(
-            this TeamHttpClient teamHttpClient, string projectNameOrId, string teamNameOrId, object userState = null)
+            this TeamHttpClient teamHttpClient, string projectNameOrId, string teamNameOrId, bool? expandIdentity = null, object userState = null)
         {
             if (teamHttpClient == null) throw new ArgumentNullException(nameof(teamHttpClient));
 
             if(string.IsNullOrWhiteSpace(projectNameOrId)) throw new ArgumentOutOfRangeException(nameof(projectNameOrId), $"'{nameof(projectNameOrId)}' may not be null or empty or whitespaces only");
             if(string.IsNullOrWhiteSpace(teamNameOrId)) throw new ArgumentOutOfRangeException(nameof(teamNameOrId), $"'{nameof(teamNameOrId)}' may not be null or empty or whitespaces only");
 
-            return Observable.FromAsync(cancellationToken => teamHttpClient.GetTeamAsync(projectNameOrId, teamNameOrId, userState, cancellationToken));
+            return Observable.FromAsync(cancellationToken => teamHttpClient.GetTeamAsync(projectNameOrId, teamNameOrId, expandIdentity, userState, cancellationToken));
         }
 
         /// <summary>

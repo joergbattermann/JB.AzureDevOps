@@ -196,14 +196,15 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         /// <param name="postedQuery">The query to create.</param>
         /// <param name="projectId">The project identifier.</param>
         /// <param name="parentQueryItemPath">The parent path for the query to create or move to.</param>
+        /// <param name="validateWiqlOnly">If you only want to validate your WIQL query without actually creating one, set it to true. Default is false.</param>
         /// <param name="userState">The userState object.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">workItemTrackingHttpClient</exception>
-        public static IObservable<QueryHierarchyItem> CreateOrMoveQuery(this WorkItemTrackingHttpClient workItemTrackingHttpClient, QueryHierarchyItem postedQuery, Guid projectId, string parentQueryItemPath, object userState = null)
+        public static IObservable<QueryHierarchyItem> CreateOrMoveQuery(this WorkItemTrackingHttpClient workItemTrackingHttpClient, QueryHierarchyItem postedQuery, Guid projectId, string parentQueryItemPath, bool? validateWiqlOnly = null, object userState = null)
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
 
-            return Observable.FromAsync(token => workItemTrackingHttpClient.CreateQueryAsync(postedQuery, projectId, parentQueryItemPath, userState, token));
+            return Observable.FromAsync(token => workItemTrackingHttpClient.CreateQueryAsync(postedQuery, projectId, parentQueryItemPath, validateWiqlOnly, userState, token));
         }
 
         /// <summary>
@@ -787,7 +788,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
                 var relationsByWorkItems = workItems
                     .GetRelatedWorkItemIds(linkTypeReferenceName)
                     .GroupBy(relationTuple => relationTuple.WorkItem, relationTuple => relationTuple.RelatedWorkItemId)
-                    .ToDictionary(grouping => grouping.Key, grouping => grouping.ToHashSet());
+                    .ToDictionary(grouping => grouping.Key, grouping => EnumerableExtensions.ToHashSet(grouping));
 
                 if (relationsByWorkItems.Count == 0 || !(relationsByWorkItems.Values.SelectMany(hashSet => hashSet).Distinct().ToList() is List<int> relatedWorkItemIds) || relatedWorkItemIds.Count == 0)
                 {
