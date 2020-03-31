@@ -208,7 +208,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         }
 
         /// <summary>
-        /// Gets all availabile work item tracking artifact link types for the <paramref name="workItemTrackingHttpClient"/>.
+        /// Gets all available work item tracking artifact link types for the <paramref name="workItemTrackingHttpClient"/>.
         /// </summary>
         /// <param name="workItemTrackingHttpClient">The work item tracking HTTP client.</param>
         /// <param name="userState">The userState object.</param>
