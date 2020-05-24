@@ -342,7 +342,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             }
             else
             {
-                value = default(TValue);
+                value = default;
                 return false;
             }
         }
@@ -535,7 +535,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             }
             else
             {
-                value = default(TValue);
+                value = default;
                 return false;
             }
         }
@@ -619,7 +619,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
             }
             else
             {
-                value = default(TResult);
+                value = default;
                 return false;
             }
         }

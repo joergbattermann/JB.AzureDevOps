@@ -38,10 +38,10 @@ namespace JB.TeamFoundationServer
             const string projectReferenceLinkKey = "web";
 
             if (teamProjectCollection.Links.Links.TryGetValue(projectReferenceLinkKey, out var linkObject) == true
-                && linkObject is ReferenceLink referencelink
-                && !string.IsNullOrWhiteSpace(referencelink.Href))
+                && linkObject is ReferenceLink referenceLink
+                && !string.IsNullOrWhiteSpace(referenceLink.Href))
             {
-                return new VssConnection(new Uri(referencelink.Href), vssCredentials).GetClient<ProjectHttpClient>();
+                return new VssConnection(new Uri(referenceLink.Href), vssCredentials).GetClient<ProjectHttpClient>();
             }
             else
             {

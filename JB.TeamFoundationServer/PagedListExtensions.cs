@@ -21,9 +21,10 @@ namespace JB.TeamFoundationServer
         /// or
         /// continuationProducer
         /// </exception>
-        public static async Task<IReadOnlyList<T>> GetAllItems<T>(this IPagedList<T> pagedList,
+        public static async Task<IReadOnlyList<T>> GetAllItems<T>(
+            this IPagedList<T> pagedList,
             Func<CancellationToken, string, Task<IPagedList<T>>> continuationProducer,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             if (pagedList == null) throw new ArgumentNullException(nameof(pagedList));
             if (continuationProducer == null) throw new ArgumentNullException(nameof(continuationProducer));

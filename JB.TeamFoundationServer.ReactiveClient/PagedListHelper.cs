@@ -10,7 +10,7 @@ namespace JB.TeamFoundationServer
     /// <summary>
     /// Helper class that works with paged lists
     /// </summary>
-    public static class PagedListHelper
+    public static partial class PagedListHelper
     {
         /// <summary>
         /// Gets all items of the provided <paramref name="pagedListProducer"/> as an observable stream.
