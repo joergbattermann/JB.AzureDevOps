@@ -27,7 +27,7 @@ namespace JB.TeamFoundationServer
         /// or
         /// continuationProducer
         /// </exception>
-        public static async IAsyncEnumerable<T> AsyncEnumerableFromPagedListProducer<T>(
+        public static async IAsyncEnumerable<T> GetAsyncEnumerableForPagedListProducer<T>(
             Func<(int? Count, int? Skip, string ContinuationToken, CancellationToken CancellationToken), Task<IPagedList<T>>> pagedListProducer,
             int? count = null,
             int? initialSkip = null,
@@ -56,7 +56,7 @@ namespace JB.TeamFoundationServer
         /// <exception cref="ArgumentNullException">pagedList
         /// or
         /// continuationProducer</exception>
-        public static async IAsyncEnumerable<T> AsyncEnumerableFromEnumerableProducer<T>(
+        public static async IAsyncEnumerable<T> GetAsyncEnumerableForListProducer<T>(
             Func<(int? Count, int? Skip, CancellationToken CancellationToken), Task<List<T>>> listProducer,
             int? count = null,
             int? initialSkip = null,
@@ -85,7 +85,7 @@ namespace JB.TeamFoundationServer
         /// <exception cref="ArgumentNullException">pagedList
         /// or
         /// continuationProducer</exception>
-        public static async IAsyncEnumerable<T> AsyncEnumerableFromEnumerableProducer<T>(
+        public static async IAsyncEnumerable<T> GetAsyncEnumerableForEnumerableProducer<T>(
             Func<(int? Count, int? Skip, CancellationToken CancellationToken), Task<IEnumerable<T>>> enumerableProducer,
             int? count = null,
             int? initialSkip = null,
