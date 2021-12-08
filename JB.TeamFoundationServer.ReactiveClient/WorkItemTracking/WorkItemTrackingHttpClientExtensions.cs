@@ -1094,8 +1094,7 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         public static IObservable<WorkItemQueryResult> GetStoredQueryResult(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid queryId, bool? timePrecision = null, object userState = null)
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
-            if (queryId == null) throw new ArgumentNullException(nameof(queryId));
-
+            
             return Observable.FromAsync(token => workItemTrackingHttpClient.QueryByIdAsync(queryId, timePrecision, userState, token));
         }
 
@@ -1114,7 +1113,6 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         public static IObservable<WorkItemQueryResult> GetStoredQueryResult(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid queryId, Guid projectId, bool? timePrecision = null, object userState = null)
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
-            if (queryId == null) throw new ArgumentNullException(nameof(queryId));
 
             return Observable.FromAsync(token => workItemTrackingHttpClient.QueryByIdAsync(projectId, queryId, timePrecision, userState, token));
         }
@@ -1134,7 +1132,6 @@ namespace JB.TeamFoundationServer.WorkItemTracking
         public static IObservable<WorkItemQueryResult> GetStoredQueryResult(this WorkItemTrackingHttpClient workItemTrackingHttpClient, Guid queryId, TeamContext teamContext, bool? timePrecision = null, object userState = null)
         {
             if (workItemTrackingHttpClient == null) throw new ArgumentNullException(nameof(workItemTrackingHttpClient));
-            if (queryId == null) throw new ArgumentNullException(nameof(queryId));
 
             return Observable.FromAsync(token => workItemTrackingHttpClient.QueryByIdAsync(teamContext, queryId, timePrecision, userState, token));
         }
