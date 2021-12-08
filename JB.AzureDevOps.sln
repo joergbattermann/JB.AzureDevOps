@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31919.166
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JB.AzureDevOps", "JB.AzureDevOps\JB.AzureDevOps.csproj", "{3BBCFB9B-070C-4896-BB64-6CB34FE19BD8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JB.AzureDevOps.ReactiveClient", "JB.AzureDevOps.ReactiveClient\JB.AzureDevOps.ReactiveClient.csproj", "{D9BE636D-8069-4A85-A0ED-5806D4A69794}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3BBCFB9B-070C-4896-BB64-6CB34FE19BD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BBCFB9B-070C-4896-BB64-6CB34FE19BD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BBCFB9B-070C-4896-BB64-6CB34FE19BD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BBCFB9B-070C-4896-BB64-6CB34FE19BD8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9BE636D-8069-4A85-A0ED-5806D4A69794}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9BE636D-8069-4A85-A0ED-5806D4A69794}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9BE636D-8069-4A85-A0ED-5806D4A69794}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9BE636D-8069-4A85-A0ED-5806D4A69794}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0E74E8BD-B8FA-47B7-A9F7-1AB470243203}
+	EndGlobalSection
+EndGlobal
