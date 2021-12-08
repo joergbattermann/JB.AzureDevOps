@@ -9,9 +9,17 @@
 		<PackageTags>azure devops server tfs vsts teamfoundation teamservices visualstudio visual studio</PackageTags>
 		<PackageProjectUrl>https://github.com/joergbattermann/JB.AzureDevOps</PackageProjectUrl>
 		<RepositoryType>git</RepositoryType>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.196.0-preview" />
 		<PackageReference Include="System.Linq.Async" Version="5.1.0" />
 		<PackageReference Include="System.Linq.Async.Queryable" Version="5.1.0" />
