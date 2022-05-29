@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>0.1.0-preview</Version>
+		<Version>0.2.2-preview</Version>
 		<Authors>Jörg Battermann</Authors>
 		<Company>Jörg Battermann</Company>
 		<RepositoryUrl>https://github.com/joergbattermann/JB.AzureDevOps</RepositoryUrl>
