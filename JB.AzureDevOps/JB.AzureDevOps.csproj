@@ -16,14 +16,14 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />
+		<PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.8" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.196.0-preview" />
-		<PackageReference Include="System.Linq.Async" Version="5.1.0" />
-		<PackageReference Include="System.Linq.Async.Queryable" Version="5.1.0" />
+		<PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.*-*" />
+		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
+		<PackageReference Include="System.Linq.Async.Queryable" Version="6.0.1" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
 </Project>
